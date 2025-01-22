@@ -8,7 +8,7 @@ sys.path.append(".")
 from imagenet import get_x_y_from_data_dict
 
 @iterative_unlearn
-def mask_NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
+def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
     forget_loader = data_loaders["forget"]
     retain_loader = data_loaders["retain"]
     retain_loader_iter = enumerate(retain_loader)
@@ -25,7 +25,7 @@ def mask_NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
         device = torch.device("cpu")
 
     # switch to train mode
-    mask_grads = [torch.ones_like(param) for param in model.parameters()]
+    num_classes = list(model.children())[-1].out_features
     model.train()
 
     start = time.time()    
@@ -39,6 +39,9 @@ def mask_NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
 
             # compute output
             output_clean = model(image)
+
+            # random target, target size
+            target = torch.randint(0, num_classes, target.shape, device=device)
 
             loss = -criterion(output_clean, target)
             optimizer.zero_grad()
@@ -67,22 +70,10 @@ def mask_NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
             optimizer.zero_grad()
             loss.backward()
 
-            beta = 0.95
-            Layer_ratio = []
             for idx_param, param in enumerate(model.parameters()):
-                mask = (param.grad * grads[idx_param] > 0)
-                # imbriqué
-                mask_grad = mask * mask_grads[idx_param]
-                mask_grads[idx_param] = mask_grad
-                # step_grad = _mask * special_aggregation(param.grad, grads[idx_param])
-                # param.grad = mask_grad * utils.special_aggregation(param.grad, grads[idx_param])
-                param.grad = mask_grad * beta * param.grad + (1 - beta) * grads[idx_param]
+                beta = 0.95
+                param.grad = beta * param.grad + (1 - beta) * grads[idx_param]
 
-                # verbose
-                # layer_ratio = 100 * torch.sum(param.grad > 0)/torch.tensor(param.size()).prod()
-                layer_ratio = torch.sum(param.grad > 0)
-                Layer_ratio.append(layer_ratio)
-            print('Sum Masking Grad :', sum(Layer_ratio))
             optimizer.step()
 
             if (i + 1) % args.print_freq == 0:
@@ -135,20 +126,9 @@ def mask_NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
             optimizer.zero_grad()
             loss.backward()
 
-            Layer_ratio = []
             for idx_param, param in enumerate(model.parameters()):
-                mask = (param.grad * grads[idx_param] > 0)
-                # imbrique
-                mask_grad = mask * mask_grads[idx_param]
-                mask_grads[idx_param] = mask_grad
-                # step_grad = _mask * special_aggregation(param.grad, grads[idx_param])
-                param.grad = mask_grad * utils.special_aggregation(param.grad, grads[idx_param])
-
-                # verbose
-                # layer_ratio = 100 * torch.sum(param.grad > 0)/torch.tensor(param.size()).prod()
-                layer_ratio = torch.sum(param.grad > 0)
-                Layer_ratio.append(layer_ratio)
-            print('Max Masking Grad :', max(Layer_ratio))
+                beta = 0.95
+                param.grad = beta * param.grad + (1 - beta) * grads[idx_param]
 
             optimizer.step()
 

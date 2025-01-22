@@ -49,6 +49,10 @@ def get_unlearn_method(name):
     elif name == "mask_NGPlus":
         return mask_NGPlus
     elif name == "NGPlus":
-        return NGPlus    
+        return NGPlus
+    elif name == "mask_SRL":
+        return mask_SRL
+    elif name == "SRL":
+        return SRL    
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")
