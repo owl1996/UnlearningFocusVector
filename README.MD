@@ -45,19 +45,11 @@ The source code is organized as follows:
 ```main_backdoor.py```: contains the main executable code for backdoor cleanse.
 ## Commands
 
-### Pruning
+### Baseline
 
-#### OMP
+#### INIT
 
-```python -u main_imp.py --data ./data --dataset $data --arch $arch --prune_type rewind_lt --rewind_epoch 8 --save_dir ${save_dir} --rate ${rate} --pruning_times 2 --num_workers 8```
-
-#### IMP
-
-```python -u main_imp.py --data ./data --dataset $data --arch $arch --prune_type rewind_lt --rewind_epoch 8 --save_dir ${save_dir} --rate 0.2 --pruning_times ${pruning_times} --num_workers 8```
-
-#### SynFlow
-
-```python -u main_synflow.py --data ./data --dataset cifar10 --prune_type rewind_lt --rewind_epoch 8 --save_dir ${save_dir} --rate ${rate} --pruning_times 1 --num_workers 8```
+```python -u main_baseline.py --data ./data --dataset $data --arch $arch  --save_dir ${save_dir} --epochs ${epochs} --num_workers 8```
 
 ### Unlearning
 
