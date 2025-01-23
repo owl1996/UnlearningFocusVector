@@ -13,21 +13,12 @@ import pruner
 import unlearn
 import utils
 from trainer import validate
+
 import mlflow
 
 
 def main():
     args = arg_parser.parse_args()
-
-    # Initialize MLflow
-    mlflow.start_run()
-
-    # Log input arguments
-    mlflow.log_param("save_dir", args.save_dir)
-    mlflow.log_param("unlearn", args.unlearn)
-    mlflow.log_param("num_indexes_to_replace", args.num_indexes_to_replace)
-    mlflow.log_param("unlearn_epochs", args.unlearn_epochs)
-    mlflow.log_param("unlearn_lr", args.unlearn_lr)
 
     if torch.cuda.is_available():
         torch.cuda.set_device(int(args.gpu))
@@ -36,13 +27,21 @@ def main():
         device = torch.device("mps")
     else:
         device = torch.device("cpu")
+    # Initialize MLflow
+    mlflow.start_run()
+
+    # Log input arguments
+    mlflow.log_param("save_dir", args.save_dir)
+    mlflow.log_param("unlearn", args.unlearn)
+    mlflow.log_param("num_indexes_to_replace", args.num_indexes_to_replace)
+    mlflow.log_param("unlearn_epochs", args.unlearn_epochs)
+    mlflow.log_param("unlearn_lr", args.unlearn_lr) 
 
     os.makedirs(args.save_dir, exist_ok=True)
     if args.seed:
         utils.setup_seed(args.seed)
     seed = args.seed
-
-    # Prepare dataset
+    # prepare dataset
     (
         model,
         train_loader_full,
@@ -146,10 +145,23 @@ def main():
     if args.resume and checkpoint is not None:
         model, evaluation_result = checkpoint
     else:
-        unlearn_method = unlearn.get_unlearn_method(args.unlearn)
+        checkpoint = torch.load(args.mask, map_location=device)
+        if "state_dict" in checkpoint.keys():
+            checkpoint = checkpoint["state_dict"]
+        current_mask = pruner.extract_mask(checkpoint)
+        pruner.prune_model_custom(model, current_mask)
+        pruner.check_sparsity(model)
 
-        # Track the unlearning method
         mlflow.log_param("unlearn_method", args.unlearn)
+
+        if (
+            args.unlearn != "retrain"
+            and args.unlearn != "retrain_sam"
+            and args.unlearn != "retrain_ls"
+        ):
+            model.load_state_dict(checkpoint, strict=False)
+
+        unlearn_method = unlearn.get_unlearn_method(args.unlearn)
 
         unlearn_method(unlearn_data_loaders, model, criterion, args)
         unlearn.save_unlearn_checkpoint(model, None, args)

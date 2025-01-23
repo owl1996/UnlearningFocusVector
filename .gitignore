@@ -20,9 +20,8 @@ lib/
 lib64/
 mlruns/
 parts/
+results/*
 sdist/
-test_cifar10/
-test_cifar100/
 var/
 wheels/
 share/python-wheels/
