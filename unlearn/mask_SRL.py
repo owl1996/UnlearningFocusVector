@@ -60,6 +60,7 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
             grads = []
             for param in model.parameters():
                 grads.append(param.grad)
+            model.zero_grad()
 
             # compute loss and grad on the retain
             _, data = next(retain_loader_iter)
@@ -78,7 +79,7 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad
                 beta = 0.95
-                param.grad = mask * beta * param.grad + (1 - beta) * grads[idx_param]
+                param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
                 layer_ratio = torch.sum(param.grad > 0)
                 Layer_ratio.append(layer_ratio)
             print('Sum Masking Grad :', sum(Layer_ratio))
@@ -105,6 +106,9 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
             image = image.to(device)
             target = target.to(device)
 
+            # random target, target size
+            target = torch.randint(0, num_classes, target.shape, device=device)
+
             # compute output
             output_clean = model(image)
 
@@ -123,6 +127,7 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
             grads = []
             for param in model.parameters():
                 grads.append(param.grad)
+            model.zero_grad()
 
             # compute loss and grad on the retain
             _, data = next(retain_loader_iter)
@@ -134,10 +139,18 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
             optimizer.zero_grad()
             loss.backward()
 
-            for idx_param, param in enumerate(model.parameters()):
-                beta = 0.95
-                param.grad = beta * param.grad + (1 - beta) * grads[idx_param]
 
+            Layer_ratio = []
+            for idx_param, param in enumerate(model.parameters()):
+                mask = (param.grad * grads[idx_param] > 0)
+                # imbriqué
+                mask_grad = mask * mask_grads[idx_param]
+                mask_grads[idx_param] = mask_grad
+                beta = 0.95
+                param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
+                layer_ratio = torch.sum(param.grad > 0)
+                Layer_ratio.append(layer_ratio)
+            print('Sum Masking Grad :', sum(Layer_ratio))
             optimizer.step()
 
             if (i + 1) % args.print_freq == 0:

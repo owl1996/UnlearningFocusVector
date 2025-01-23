@@ -74,9 +74,8 @@ def mask_NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
                 # imbriqué
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad
-                # step_grad = _mask * special_aggregation(param.grad, grads[idx_param])
-                # param.grad = mask_grad * utils.special_aggregation(param.grad, grads[idx_param])
-                param.grad = mask_grad * beta * param.grad + (1 - beta) * grads[idx_param]
+                beta = 0.95
+                param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
 
                 # verbose
                 # layer_ratio = 100 * torch.sum(param.grad > 0)/torch.tensor(param.size()).prod()
@@ -138,17 +137,17 @@ def mask_NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
             Layer_ratio = []
             for idx_param, param in enumerate(model.parameters()):
                 mask = (param.grad * grads[idx_param] > 0)
-                # imbrique
+                # imbriqué
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad
-                # step_grad = _mask * special_aggregation(param.grad, grads[idx_param])
-                param.grad = mask_grad * utils.special_aggregation(param.grad, grads[idx_param])
+                beta = 0.95
+                param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
 
                 # verbose
                 # layer_ratio = 100 * torch.sum(param.grad > 0)/torch.tensor(param.size()).prod()
                 layer_ratio = torch.sum(param.grad > 0)
                 Layer_ratio.append(layer_ratio)
-            print('Max Masking Grad :', max(Layer_ratio))
+            print('Sum Masking Grad :', sum(Layer_ratio))
 
             optimizer.step()
 
