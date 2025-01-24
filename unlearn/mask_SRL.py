@@ -150,6 +150,7 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
                 param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
                 layer_ratio = torch.sum(param.grad > 0)
                 Layer_ratio.append(layer_ratio)
+                
             print('Sum Masking Grad :', sum(Layer_ratio))
             optimizer.step()
 
