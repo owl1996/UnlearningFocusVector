@@ -9,7 +9,7 @@ base_script = "python -u mlflow_forget.py"
 save_dir = ["./results/cifar10"]
 mask = ["./results/cifar10/0model_SA_best.pth.tar"]
 unlearn = ["NGPlus", "mask_NGPlus", "SRL", "mask_SRL"]
-unlearn_epochs = ["1", "2"]
+unlearn_epochs = ["1", "2", "3"]
 
 commands = [base_script
             + " --save_dir " + _save_dir
