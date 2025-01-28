@@ -17,6 +17,7 @@ from trainer import validate
 import mlflow
 
 
+    
 def main():
     args = arg_parser.parse_args()
 
@@ -145,7 +146,7 @@ def main():
     if args.resume and checkpoint is not None:
         model, evaluation_result = checkpoint
     else:
-        checkpoint = torch.load(args.mask, map_location=device)
+        checkpoint = torch.load(args.mask, map_location=device, weights_only = False)
         if "state_dict" in checkpoint.keys():
             checkpoint = checkpoint["state_dict"]
         current_mask = pruner.extract_mask(checkpoint)

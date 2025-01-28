@@ -44,7 +44,7 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
             # random target, target size
             target = torch.randint(0, num_classes, target.shape, device=device)
 
-            loss = -criterion(output_clean, target)
+            loss = criterion(output_clean, target)
             optimizer.zero_grad()
             loss.backward()
 
@@ -112,7 +112,7 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
             # compute output
             output_clean = model(image)
 
-            loss = -criterion(output_clean, target)
+            loss = criterion(output_clean, target)
             optimizer.zero_grad()
             loss.backward()
 

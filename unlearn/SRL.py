@@ -8,7 +8,7 @@ sys.path.append(".")
 from imagenet import get_x_y_from_data_dict
 
 @iterative_unlearn
-def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
+def SRL(data_loaders, model, criterion, optimizer, epoch, args):
     forget_loader = data_loaders["forget"]
     retain_loader = data_loaders["retain"]
     retain_loader_iter = enumerate(retain_loader)
@@ -43,7 +43,7 @@ def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
             # random target, target size
             target = torch.randint(0, num_classes, target.shape, device=device)
 
-            loss = -criterion(output_clean, target)
+            loss = criterion(output_clean, target)
             optimizer.zero_grad()
             loss.backward()
 
@@ -99,8 +99,8 @@ def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
 
             # compute output
             output_clean = model(image)
-
-            loss = -criterion(output_clean, target)
+            target = torch.randint(0, num_classes, target.shape, device=device)
+            loss = criterion(output_clean, target)
             optimizer.zero_grad()
             loss.backward()
 

@@ -10,6 +10,8 @@ from .retrain_sam import retrain_sam
 from .Wfisher import Wfisher
 from .mask_NGPlus import mask_NGPlus
 from .NGPlus import NGPlus
+from .SRL import SRL
+from .mask_SRL import mask_SRL
 
 
 def raw(data_loaders, model, criterion, args):

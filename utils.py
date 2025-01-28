@@ -432,3 +432,11 @@ def get_poisoned_loader(poison_loader, unpoison_loader, test_loader, poison_func
 def special_aggregation(tensor_1, tensor_2):
     condition = torch.abs(tensor_1) < torch.abs(tensor_2)
     return torch.where(condition, tensor_1, tensor_2)
+
+def freeze_params(model, mask):
+    # Freeze params for grad
+    for params, mask in zip(list(model.parameters()), mask):
+        params.requires_grad = False
+        grading_params = mask * params
+        params = params - grading_params
+    return 
