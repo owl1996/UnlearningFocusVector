@@ -8,7 +8,9 @@ sys.path.append(".")
 from imagenet import get_x_y_from_data_dict
 
 @iterative_unlearn
-def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
+def SalUn(data_loaders, model, criterion, optimizer, epoch, args):
+    beta = 0.9
+
     forget_loader = data_loaders["forget"]
     retain_loader = data_loaders["retain"]
     retain_loader_iter = enumerate(retain_loader)
@@ -37,8 +39,23 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
                 utils.warmup_lr(
                     epoch, i + 1, optimizer, one_epoch_step=len(forget_loader), args=args
                 )
+            
+             # compute output for masking salUn
+            output_clean = model(image)
+
+            loss = -criterion(output_clean, target)
+            optimizer.zero_grad()
+            loss.backward()
+
+            for idx_param, param in enumerate(model.parameters()):
+                # salUn
+                mask = (torch.abs(param.grad) >= torch.abs(param.grad).median())
+                # imbriqué
+                mask_grad = mask * mask_grads[idx_param]
+                mask_grads[idx_param] = mask_grad
 
             # compute output
+            model.zero_grad()
             output_clean = model(image)
 
             # random target, target size
@@ -67,17 +84,8 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
             optimizer.zero_grad()
             loss.backward()
 
-            Layer_ratio = []
             for idx_param, param in enumerate(model.parameters()):
-                mask = (param.grad * grads[idx_param] > 0)
-                # imbriqué
-                mask_grad = mask * mask_grads[idx_param]
-                mask_grads[idx_param] = mask_grad
-                beta = 0.9
-                param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
-                layer_ratio = torch.sum(param.grad > 0)
-                Layer_ratio.append(layer_ratio)
-            print('Sum Masking Grad :', sum(Layer_ratio))
+                param.grad = mask_grads[idx_param] * (beta * param.grad + (1 - beta) * grads[idx_param])
             optimizer.step()
             
             # measure accuracy and record loss
@@ -108,6 +116,23 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
             image = image.to(device)
             target = target.to(device)
 
+            # compute output for masking salUn
+            output_clean = model(image)
+
+            loss = -criterion(output_clean, target)
+            optimizer.zero_grad()
+            loss.backward()
+
+            for idx_param, param in enumerate(model.parameters()):
+                # salUn
+                mask = (torch.abs(param.grad) >= torch.abs(param.grad).median())
+                # imbriqué
+                mask_grad = mask * mask_grads[idx_param]
+                mask_grads[idx_param] = mask_grad
+
+            # compute output
+            model.zero_grad()
+
             # random target, target size
             target = (target + torch.randint(1, num_classes, target.shape, device=device)) % num_classes
 
@@ -120,7 +145,7 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
 
             output = output_clean.float()
             loss = loss.float()
-
+            
             # copy the grads
             grads = []
             for param in model.parameters():
@@ -137,19 +162,8 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
             optimizer.zero_grad()
             loss.backward()
 
-
-            Layer_ratio = []
             for idx_param, param in enumerate(model.parameters()):
-                mask = (param.grad * grads[idx_param] > 0)
-                # imbriqué
-                mask_grad = mask * mask_grads[idx_param]
-                mask_grads[idx_param] = mask_grad
-                beta = 0.9
-                param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
-                layer_ratio = torch.sum(param.grad > 0)
-                Layer_ratio.append(layer_ratio)
-                
-            print('Sum Masking Grad :', sum(Layer_ratio))
+                param.grad = mask_grads[idx_param] * (beta * param.grad + (1 - beta) * grads[idx_param])
             optimizer.step()
 
             # measure accuracy and record loss

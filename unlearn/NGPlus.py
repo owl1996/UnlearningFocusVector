@@ -45,11 +45,6 @@ def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
 
             output = output_clean.float()
             loss = loss.float()
-            # measure accuracy and record loss
-            prec1 = utils.accuracy(output.data, target)[0]
-
-            losses.update(loss.item(), image.size(0))
-            top1.update(prec1.item(), image.size(0))
 
             # copy the grads
             grads = []
@@ -71,6 +66,13 @@ def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
                 param.grad = beta * param.grad + (1 - beta) * grads[idx_param]
 
             optimizer.step()
+
+            # measure accuracy and record loss
+            output = output_clean.float()
+            loss = loss.float()
+            prec1 = utils.accuracy(output.data, target)[0]
+            losses.update(loss.item(), image.size(0))
+            top1.update(prec1.item(), image.size(0))
 
             if (i + 1) % args.print_freq == 0:
                 end = time.time()
@@ -102,10 +104,6 @@ def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
 
             output = output_clean.float()
             loss = loss.float()
-            # measure accuracy and record loss
-            prec1 = utils.accuracy(output.data, target)[0]
-            losses.update(loss.item(), image.size(0))
-            top1.update(prec1.item(), image.size(0))
 
             # copy the grads
             grads = []
@@ -127,6 +125,13 @@ def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
                 param.grad = beta * param.grad + (1 - beta) * grads[idx_param]
 
             optimizer.step()
+
+            # measure accuracy and record loss
+            output = output_clean.float()
+            loss = loss.float()
+            prec1 = utils.accuracy(output.data, target)[0]
+            losses.update(loss.item(), image.size(0))
+            top1.update(prec1.item(), image.size(0))
 
             if (i + 1) % args.print_freq == 0:
                 end = time.time()

@@ -12,6 +12,9 @@ from .mask_NGPlus import mask_NGPlus
 from .NGPlus import NGPlus
 from .SRL import SRL
 from .mask_SRL import mask_SRL
+from .mask_barrier import mask_barrier
+from .barrier import barrier
+from .SalUn import SalUn
 
 
 def raw(data_loaders, model, criterion, args):
@@ -55,6 +58,12 @@ def get_unlearn_method(name):
     elif name == "mask_SRL":
         return mask_SRL
     elif name == "SRL":
-        return SRL    
+        return SRL
+    elif name == "barrier":
+        return barrier
+    elif name == "mask_barrier":
+        return mask_barrier
+    elif name == "SalUn":
+        return SalUn
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")

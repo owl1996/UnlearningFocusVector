@@ -8,8 +8,8 @@ base_script = "python -u mlflow_forget.py"
 
 save_dir = ["./results/cifar10"]
 mask = ["./results/cifar10/0model_SA_best.pth.tar"]
-unlearn = ["NGPlus", "mask_NGPlus", "SRL", "mask_SRL"]
-unlearn_epochs = ["1", "2", "3"]
+unlearn = ["NGPlus", "mask_NGPlus", "SRL", "mask_SRL", "SalUn"]
+unlearn_epochs = ["1", "2"]
 
 commands = [base_script
             + " --save_dir " + _save_dir
@@ -23,20 +23,20 @@ commands = [base_script
 def run_command(cmd):
     """Exécute une commande et gère les erreurs"""
     try:
-        print(f"🚀 Démarrage: {cmd}")
+        print(f"Démarrage: {cmd}")
         result = subprocess.run(
             cmd.split(), 
             check=True,
             capture_output=True,
             text=True
         )
-        print(f"✅ Succès: {cmd}\nSortie:\n{result.stdout[:200]}...")  # Affiche les 200 premiers caractères
+        print(f"Succès: {cmd}\nSortie:\n{result.stdout[:200]}...")  # Affiche les 200 premiers caractères
         return True
     except subprocess.CalledProcessError as e:
-        print(f"❌ Erreur dans {cmd}\nCode: {e.returncode}\nErreur: {e.stderr[:200]}...")
+        print(f"Erreur dans {cmd}\nCode: {e.returncode}\nErreur: {e.stderr[:200]}...")
         return False
     except Exception as e:
-        print(f"🐛 Exception inattendue: {str(e)}")
+        print(f"Exception inattendue: {str(e)}")
         return False
 
 # Exécution parallèle (ajuster max_workers selon ton CPU)
@@ -45,6 +45,6 @@ with ThreadPoolExecutor(max_workers=1) as executor:
 
 # Vérification finale
 if all(results):
-    print("\n🎉 Toutes les commandes ont réussi !")
+    print("\nToutes les commandes ont réussi !")
 else:
-    print("\n⚠️ Certaines commandes ont échoué, vérifie les logs ci-dessus.")
+    print("\nCertaines commandes ont échoué, vérifie les logs ci-dessus.")
