@@ -118,7 +118,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, l1=False):
                     "Loss {loss.val:.4f} ({loss.avg:.4f})\t"
                     "Accuracy {top1.val:.3f} ({top1.avg:.3f})\t"
                     "Time {3:.2f}".format(
-                        epoch, i, len(train_loader), end - start, loss=losses, top1=top1
+                        epoch + 1, i, len(train_loader), end - start, loss=losses, top1=top1
                     )
                 )
                 start = time.time()

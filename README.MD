@@ -18,9 +18,11 @@ The source code is organized as follows:
 
 ```utils.py```: contains the utility functions. 
 
-```main_imp.py```: contains the code for training and pruning. 
+```main_baseline.py```: contains the code for training a base model to unlearn. 
 
 ```main_forget.py```: contains the main executable code for unlearning. 
+
+```mlflow_forget.py```: contains the main executable code for unlearning with mlflow tracking.
 
 ```main_backdoor.py```: contains the main executable code for backdoor cleanse.
 
@@ -29,51 +31,16 @@ The source code is organized as follows:
 
 ### Baseline
 
-#### INIT
+#### Cifar10
 
-```python -u main_baseline.py --data ./data --dataset $data --arch $arch  --save_dir ${save_dir} --epochs ${epochs} --num_workers 8```
+```python -u main_baseline.py --data ./data --dataset cifar10 --arch resnet18 --save_dir ./results/cifar10 --epochs 10 --num_indexes_to_replace 4500```
+
+#### Cifar 100
+
+```python -u main_baseline.py --data ./data --dataset cifar100 --arch resnet18 --save_dir ./results/cifar100 --epochs 10 -num_indexes_to_replace 450 --num_classes 100```
 
 #### Benchmarking
 
 ```python benchmark.py```
 
-### Unlearning
-
-#### Retrain
-
-```python -u main_forget.py --save_dir ${save_dir} --mask ${mask_path} --unlearn retrain --num_indexes_to_replace 4500 --unlearn_epochs 160 --unlearn_lr 0.1```
-
-#### FT
-
-```python -u main_forget.py --save_dir ${save_dir} --mask ${mask_path} --unlearn FT --num_indexes_to_replace 4500 --unlearn_lr 0.01 --unlearn_epochs 10```
-
-#### GA
-
-```python -u main_forget.py --save_dir ${save_dir} --mask ${mask_path} --unlearn GA --num_indexes_to_replace 4500 --unlearn_lr 0.0001 --unlearn_epochs 5```
-
-#### FF
-
-```python -u main_forget.py --save_dir ${save_dir} --mask ${mask_path} --unlearn fisher_new --num_indexes_to_replace 4500 --alpha ${alpha}```
-
-#### IU
-
-```python -u main_forget.py --save_dir ${save_dir} --mask ${mask_path} --unlearn wfisher --num_indexes_to_replace 4500 --alpha ${alpha}```
-
-#### $\ell_1$-sparse
-
-```python -u main_forget.py --save_dir ${save_dir} --mask ${mask_path} --unlearn FT_prune --num_indexes_to_replace 4500 --alpha ${alpha} --unlearn_lr 0.01 --unlearn_epochs 10```
-
-### Trojan model cleanse
-
-```python -u main_backdoor.py --save_dir ${save_dir} --mask ${mask_path} --unlearn FT --num_indexes_to_replace 4500```
-
-## BibTeX
-If you find this repository or the ideas presented in our paper useful, please consider citing.
-```
-@inproceedings{jia2023model,
-  title={Model Sparsity Can Simplify Machine Unlearning},
-  author={Jia, Jinghan and Liu, Jiancheng and Ram, Parikshit and Yao, Yuguang and Liu, Gaowen and Liu, Yang and Sharma, Pranay and Liu, Sijia},
-  booktitle={Thirty-seventh Conference on Neural Information Processing Systems},
-  year={2023}
-}
 ```
