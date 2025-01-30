@@ -6,18 +6,22 @@ import itertools
 
 base_script = "python -u mlflow_forget.py"
 
-save_dir = ["./results/cifar10"]
-mask = ["./results/cifar10/0model_SA_best.pth.tar"]
+dataset = ["cifar10" , "cifar100"]
+# dataset = ["cifar100"]
+# save_dir = ["./results/cifar100"]
+mask = ["/0model_SA_best.pth.tar"]
 unlearn = ["NGPlus", "mask_NGPlus", "SRL", "mask_SRL", "SalUn"]
 unlearn_epochs = ["1", "2"]
 
 commands = [base_script
-            + " --save_dir " + _save_dir
-            + " --mask " + _mask
+            + " --save_dir ./results/" + _dataset
+            + " --mask ./results/" + _dataset + _mask
             + " --unlearn " + _unlearn
             + " --unlearn_epochs " + _unlearn_epochs
             + " --unlearn_lr 0.1"
-            for (_save_dir, _mask, _unlearn, _unlearn_epochs) in itertools.product(save_dir, mask, unlearn, unlearn_epochs)
+            + " --data ./data"
+            + " --dataset " + _dataset
+            for (_dataset, _mask, _unlearn, _unlearn_epochs) in itertools.product(dataset, mask, unlearn, unlearn_epochs)
 ]
 
 def run_command(cmd):

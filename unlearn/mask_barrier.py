@@ -70,7 +70,7 @@ def mask_barrier(data_loaders, model, criterion, optimizer, epoch, args):
             Layer_ratio = []
 
             for idx_param, param in enumerate(model.parameters()):
-                mask = (param.grad * grads[idx_param] > 0)
+                mask = (param.grad * grads[idx_param] > 0.1 * torch.max(param.grad * grads[idx_param]))
                 # imbriqué
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad
@@ -140,7 +140,7 @@ def mask_barrier(data_loaders, model, criterion, optimizer, epoch, args):
 
             Layer_ratio = []
             for idx_param, param in enumerate(model.parameters()):
-                mask = (param.grad * grads[idx_param] > 0)
+                mask = (param.grad * grads[idx_param] > 0.1 * torch.max(param.grad * grads[idx_param]))
                 # imbriqué
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad
