@@ -42,5 +42,3 @@ The source code is organized as follows:
 #### Benchmarking
 
 ```python benchmark.py```
-
-```
