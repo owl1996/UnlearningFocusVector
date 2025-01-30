@@ -37,7 +37,7 @@ The source code is organized as follows:
 
 #### Cifar 100
 
-```python -u main_baseline.py --data ./data --dataset cifar100 --arch resnet18 --save_dir ./results/cifar100 --epochs 10 -num_indexes_to_replace 450 --num_classes 100```
+```python -u main_baseline.py --data ./data --dataset cifar100 --arch resnet18 --save_dir ./results/cifar100 --epochs 10 --num_indexes_to_replace 450 --num_classes 100```
 
 #### Benchmarking
 
