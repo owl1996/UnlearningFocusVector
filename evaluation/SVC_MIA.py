@@ -120,7 +120,6 @@ def SVC_MIA(shadow_train, target_train, target_test, shadow_test, model):
 
     shadow_train_entr = entropy(shadow_train_prob)
     shadow_test_entr = entropy(shadow_test_prob)
-
     target_train_entr = entropy(target_train_prob)
     target_test_entr = entropy(target_test_prob)
 
