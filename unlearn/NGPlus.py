@@ -62,7 +62,7 @@ def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
             loss.backward()
 
             for idx_param, param in enumerate(model.parameters()):
-                beta = 0.95
+                beta = args.beta
                 param.grad = beta * param.grad + (1 - beta) * grads[idx_param]
 
             optimizer.step()
@@ -121,7 +121,7 @@ def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
             loss.backward()
 
             for idx_param, param in enumerate(model.parameters()):
-                beta = 0.95
+                beta = args.beta
                 param.grad = beta * param.grad + (1 - beta) * grads[idx_param]
 
             optimizer.step()

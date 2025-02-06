@@ -144,7 +144,6 @@ def mask_barrier(data_loaders, model, criterion, optimizer, epoch, args):
                 # imbriqué
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad
-                beta = 0.9
                 param.grad = t * grads[idx_param] + param.grad / loss
                 layer_ratio = torch.sum(param.grad > 0)
                 Layer_ratio.append(layer_ratio)

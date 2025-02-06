@@ -66,6 +66,7 @@ def parse_args():
     ##################################### Training setting #################################################
     parser.add_argument("--batch_size", type=int, default=256, help="batch size")
     parser.add_argument("--lr", default=0.1, type=float, help="initial learning rate")
+    parser.add_argument("--beta", default=0.9, type=float, help="ponderation for gradients mixture")
     parser.add_argument("--momentum", default=0.9, type=float, help="momentum")
     parser.add_argument("--weight_decay", default=5e-4, type=float, help="weight decay")
     parser.add_argument(

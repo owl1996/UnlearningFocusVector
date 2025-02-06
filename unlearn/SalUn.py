@@ -9,7 +9,7 @@ from imagenet import get_x_y_from_data_dict
 
 @iterative_unlearn
 def SalUn(data_loaders, model, criterion, optimizer, epoch, args):
-    beta = 0.9
+    beta = args.beta
 
     forget_loader = data_loaders["forget"]
     retain_loader = data_loaders["retain"]
@@ -85,6 +85,7 @@ def SalUn(data_loaders, model, criterion, optimizer, epoch, args):
             loss.backward()
 
             for idx_param, param in enumerate(model.parameters()):
+                
                 param.grad = mask_grads[idx_param] * (beta * param.grad + (1 - beta) * grads[idx_param])
             optimizer.step()
             

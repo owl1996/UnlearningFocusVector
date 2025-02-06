@@ -69,14 +69,13 @@ def mix_NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
             optimizer.zero_grad()
             loss.backward()
 
-            beta = 0.95
+            beta = args.beta
             Layer_ratio = []
             for idx_param, param in enumerate(model.parameters()):
                 mask = param.grad * grads[idx_param] > 0
                 # imbriqué
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad
-                beta = 0.95
                 param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
 
                 # verbose
@@ -152,7 +151,7 @@ def mix_NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
                 # imbriqué
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad
-                beta = 0.95
+                beta = args.beta
                 param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
 
                 # verbose
