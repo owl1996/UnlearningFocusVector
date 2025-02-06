@@ -73,7 +73,7 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
                 # imbriqué
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad
-                beta = 0.9
+                beta = args.beta
                 param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
                 layer_ratio = torch.sum(param.grad > 0)
                 Layer_ratio.append(layer_ratio)
@@ -144,7 +144,7 @@ def mask_SRL(data_loaders, model, criterion, optimizer, epoch, args):
                 # imbriqué
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad
-                beta = 0.9
+                beta = args.beta
                 param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
                 layer_ratio = torch.sum(param.grad > 0)
                 Layer_ratio.append(layer_ratio)

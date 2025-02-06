@@ -10,6 +10,7 @@ dataset = ["cifar10", "cifar100"]
 mask = ["/0model_SA_best.pth.tar"]
 unlearn = ["NGPlus", "mask_NGPlus", "mix_NGPlus", "SRL", "mask_SRL", "mix_SRL", "SalUn", "FT"]
 unlearn_epochs = ["1", "2", "5"]
+beta = ["0.85", "0.9", "0.95"]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
@@ -19,7 +20,8 @@ commands = [base_script
             + " --unlearn_lr 0.1"
             + " --data ./data"
             + " --dataset " + _dataset
-            for (_dataset, _mask, _unlearn, _unlearn_epochs) in itertools.product(dataset, mask, unlearn, unlearn_epochs)
+            + " --beta " + _beta
+            for (_dataset, _mask, _unlearn, _unlearn_epochs, _beta) in itertools.product(dataset, mask, unlearn, unlearn_epochs, beta)
 ]
 
 def run_command(cmd):
