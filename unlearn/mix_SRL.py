@@ -8,10 +8,7 @@ sys.path.append(".")
 from imagenet import get_x_y_from_data_dict
 
 @iterative_unlearn
-def mask_barrier(data_loaders, model, criterion, optimizer, epoch, args):
-    mu = 1.1
-    t = 1
-
+def mix_SRL(data_loaders, model, criterion, optimizer, epoch, args):
     forget_loader = data_loaders["forget"]
     retain_loader = data_loaders["retain"]
     retain_loader_iter = enumerate(retain_loader)
@@ -44,9 +41,19 @@ def mask_barrier(data_loaders, model, criterion, optimizer, epoch, args):
             # compute output
             output_clean = model(image)
 
+            # random target, target size
+            target = (target + torch.randint(1, num_classes, target.shape, device=device)) % num_classes
+
             loss = criterion(output_clean, target)
             optimizer.zero_grad()
             loss.backward()
+
+            # salUn
+            for idx_param, param in enumerate(model.parameters()):
+                mask = (torch.abs(param.grad) >= torch.abs(param.grad).median())
+                # imbriqué
+                mask_grad = mask * mask_grads[idx_param]
+                mask_grads[idx_param] = mask_grad
 
             output = output_clean.float()
             loss = loss.float()
@@ -68,19 +75,18 @@ def mask_barrier(data_loaders, model, criterion, optimizer, epoch, args):
             loss.backward()
 
             Layer_ratio = []
-
             for idx_param, param in enumerate(model.parameters()):
                 mask = param.grad * grads[idx_param] > 0
                 # imbriqué
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad
-                param.grad = t * grads[idx_param] + param.grad / loss
+                beta = 0.9
+                param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
                 layer_ratio = torch.sum(param.grad > 0)
                 Layer_ratio.append(layer_ratio)
             print('Sum Masking Grad :', sum(Layer_ratio))
-            t = mu * t
             optimizer.step()
-
+            
             # measure accuracy and record loss
             output = output_clean.float()
             loss = loss.float()
@@ -119,6 +125,13 @@ def mask_barrier(data_loaders, model, criterion, optimizer, epoch, args):
             optimizer.zero_grad()
             loss.backward()
 
+            # salUn
+            for idx_param, param in enumerate(model.parameters()):
+                mask = (torch.abs(param.grad) >= torch.abs(param.grad).median())
+                # imbriqué
+                mask_grad = mask * mask_grads[idx_param]
+                mask_grads[idx_param] = mask_grad
+
             output = output_clean.float()
             loss = loss.float()
 
@@ -138,6 +151,7 @@ def mask_barrier(data_loaders, model, criterion, optimizer, epoch, args):
             optimizer.zero_grad()
             loss.backward()
 
+
             Layer_ratio = []
             for idx_param, param in enumerate(model.parameters()):
                 mask = param.grad * grads[idx_param] > 0
@@ -145,12 +159,11 @@ def mask_barrier(data_loaders, model, criterion, optimizer, epoch, args):
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad
                 beta = 0.9
-                param.grad = t * grads[idx_param] + param.grad / loss
+                param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
                 layer_ratio = torch.sum(param.grad > 0)
                 Layer_ratio.append(layer_ratio)
                 
             print('Sum Masking Grad :', sum(Layer_ratio))
-            t = mu * t
             optimizer.step()
 
             # measure accuracy and record loss

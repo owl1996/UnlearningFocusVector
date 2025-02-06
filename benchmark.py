@@ -6,10 +6,10 @@ import itertools
 
 base_script = "python -u mlflow_forget.py"
 
-dataset = ["cifar10" , "cifar100"]
+dataset = ["cifar10"]
 mask = ["/0model_SA_best.pth.tar"]
-unlearn = ["NGPlus", "mask_NGPlus", "SRL", "mask_SRL", "SalUn", "FT"]
-unlearn_epochs = ["1", "2", "5", "10"]
+unlearn = ["NGPlus", "mask_NGPlus", "mix_NGPlus", "SRL", "mask_SRL", "mix_SRL", "SalUn", "FT"]
+unlearn_epochs = ["1"]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
