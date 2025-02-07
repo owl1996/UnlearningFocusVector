@@ -49,7 +49,7 @@ def SalUn(data_loaders, model, criterion, optimizer, epoch, args):
 
             for idx_param, param in enumerate(model.parameters()):
                 # salUn
-                mask = (torch.abs(param.grad) >= torch.abs(param.grad).median())
+                mask = (torch.abs(param.grad) >= torch.quantile(torch.abs(param.grad), args.quantile, interpolation='midpoint'))
                 # imbriqué
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad
@@ -126,7 +126,7 @@ def SalUn(data_loaders, model, criterion, optimizer, epoch, args):
 
             for idx_param, param in enumerate(model.parameters()):
                 # salUn
-                mask = (torch.abs(param.grad) >= torch.abs(param.grad).median())
+                mask = (torch.abs(param.grad) >= torch.quantile(torch.abs(param.grad), args.quantile, interpolation='midpoint'))
                 # imbriqué
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad

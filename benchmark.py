@@ -6,11 +6,12 @@ import itertools
 
 base_script = "python -u mlflow_forget.py"
 
-dataset = ["cifar10", "cifar100"]
+dataset = ["cifar100"]
 mask = ["/0model_SA_best.pth.tar"]
 unlearn = ["NGPlus", "mask_NGPlus", "mix_NGPlus", "SRL", "mask_SRL", "mix_SRL", "SalUn", "FT"]
 unlearn_epochs = ["1", "2", "5"]
 beta = ["0.85", "0.9", "0.95"]
+quantile = ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6"]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
@@ -20,9 +21,23 @@ commands = [base_script
             + " --unlearn_lr 0.1"
             + " --data ./data"
             + " --dataset " + _dataset
-            + " --beta " + _beta
-            for (_dataset, _mask, _unlearn, _unlearn_epochs, _beta) in itertools.product(dataset, mask, unlearn, unlearn_epochs, beta)
+            for (_dataset, _mask, _unlearn, _unlearn_epochs) in itertools.product(dataset, mask, unlearn, unlearn_epochs) 
 ]
+
+new_commands = []
+for command in commands:
+    if ("SRL" in command) or ("SalUn" in command) or ("NGPlus" in command):
+        commands.remove(command)
+        for _beta in beta:
+            new_command = command + " --beta " + _beta
+            if ("SalUn" in command) or ("mix" in command):
+                for _quantile in quantile:
+                    new_command_ = new_command + " --quantile " + _quantile
+                    new_commands.append(new_command_)
+            else:
+                new_commands.append(new_command)
+    else:
+        new_commands.append(command)
 
 def run_command(cmd):
     """Exécute une commande et gère les erreurs"""
@@ -45,7 +60,7 @@ def run_command(cmd):
 
 # Exécution parallèle (ajuster max_workers selon ton CPU)
 with ThreadPoolExecutor(max_workers=1) as executor:
-    results = executor.map(run_command, commands)
+    results = executor.map(run_command, new_commands)
 
 # Vérification finale
 if all(results):

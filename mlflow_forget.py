@@ -37,6 +37,8 @@ def main():
     mlflow.log_param("num_indexes_to_replace", args.num_indexes_to_replace)
     mlflow.log_param("unlearn_epochs", args.unlearn_epochs)
     mlflow.log_param("unlearn_lr", args.unlearn_lr) 
+    mlflow.log_param("beta", args.beta)
+    mlflow.log_param("quantile", args.quantile)
 
     os.makedirs(args.save_dir, exist_ok=True)
     if args.seed:
