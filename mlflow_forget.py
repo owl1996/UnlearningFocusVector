@@ -13,11 +13,10 @@ import pruner
 import unlearn
 import utils
 from trainer import validate
+from time import time
 
 import mlflow
 
-
-    
 def main():
     args = arg_parser.parse_args()
 
@@ -28,6 +27,8 @@ def main():
         device = torch.device("mps")
     else:
         device = torch.device("cpu")
+
+    time_t0 = time()
     # Initialize MLflow
     mlflow.start_run()
 
@@ -169,6 +170,8 @@ def main():
         unlearn_method(unlearn_data_loaders, model, criterion, args)
         unlearn.save_unlearn_checkpoint(model, None, args)
 
+    mlflow.log_metric("RTE", time()-time_t0)
+    
     if evaluation_result is None:
         evaluation_result = {}
 
@@ -272,7 +275,7 @@ def main():
         unlearn.save_unlearn_checkpoint(model, evaluation_result, args)
 
     unlearn.save_unlearn_checkpoint(model, evaluation_result, args)
-
+    
 
 if __name__ == "__main__":
     main()
