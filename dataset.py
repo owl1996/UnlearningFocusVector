@@ -644,7 +644,6 @@ def cifar10_dataloaders(
 
     return train_loader, val_loader, test_loader
 
-
 def replace_indexes(
     dataset: torch.utils.data.Dataset, indexes, seed=0, only_mark: bool = False
 ):
@@ -670,6 +669,7 @@ def replace_indexes(
             except:
                 dataset._labels[indexes] = -dataset._labels[indexes] - 1
 
+    print(f"Replaced indexes {indexes}")
 
 def replace_class(
     dataset: torch.utils.data.Dataset,
@@ -694,6 +694,8 @@ def replace_class(
                 indexes = np.flatnonzero(np.array(dataset.labels) == class_to_replace)
             except:
                 indexes = np.flatnonzero(np.array(dataset._labels) == class_to_replace)
+    # print indexes
+    print(f"Marked indexes : {indexes}")
 
     if num_indexes_to_replace is not None:
         assert num_indexes_to_replace <= len(
@@ -703,7 +705,6 @@ def replace_class(
         indexes = rng.choice(indexes, size=num_indexes_to_replace, replace=False)
         print(f"Replacing indexes {indexes}")
     replace_indexes(dataset, indexes, seed, only_mark)
-
 
 if __name__ == "__main__":
     train_loader, val_loader, test_loader = cifar10_dataloaders()

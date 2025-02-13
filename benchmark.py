@@ -38,6 +38,8 @@ for command in commands:
                 new_commands.append(new_command)
     else:
         new_commands.append(command)
+    
+print(new_commands)
 
 def run_command(cmd):
     """Exécute une commande et gère les erreurs"""
