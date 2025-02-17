@@ -7,14 +7,39 @@ from .impl import iterative_unlearn
 sys.path.append(".")
 from imagenet import get_x_y_from_data_dict
 
-@iterative_unlearn
-def mix_SRL(data_loaders, model, criterion, optimizer, epoch, args):
-    forget_loader = data_loaders["forget"]
-    retain_loader = data_loaders["retain"]
-    retain_loader_iter = enumerate(retain_loader)
+import argparse
+import os
+import pdb
+import pickle
+import random
+import shutil
+import time
+from copy import deepcopy
 
-    losses = utils.AverageMeter()
-    top1 = utils.AverageMeter()
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+import torch.backends.cudnn as cudnn
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim
+import torch.utils.data
+import torchvision.datasets as datasets
+import torchvision.models as models
+import torchvision.transforms as transforms
+from torch.utils.data.sampler import SubsetRandomSampler
+
+import arg_parser
+from trainer import train, validate
+from utils import *
+from utils import NormalizeByChannelMeanStd
+
+best_sa = 0
+
+
+@iterative_unlearn
+def ideal(data_loaders, model, criterion, optimizer, epoch, args):
+    forget_loader = data_loaders["forget"]
 
     if torch.cuda.is_available():
         torch.cuda.set_device(int(args.gpu))
@@ -24,10 +49,75 @@ def mix_SRL(data_loaders, model, criterion, optimizer, epoch, args):
     else:
         device = torch.device("cpu")
 
-    # switch to train mode
-    num_classes = list(model.children())[-1].out_features
-    mask_grads = [torch.ones_like(param) for param in model.parameters()]
-    model.train()
+    print(device)
+    initalization = None
+
+    os.makedirs(args.save_dir, exist_ok=True)
+    if args.seed:
+        setup_seed(args.seed)
+
+    # prepare dataset
+    if args.dataset == "cifar10" or args.dataset == "cifar100":
+        model, _, val_loader, test_loader, _ = setup_model_dataset(args)
+    else:
+        model, _, val_loader, test_loader = setup_model_dataset(args)
+    train_loader = data_loaders["retain"]
+    retain_loader_iter = enumerate(train_loader)
+    model.to(device)
+
+    criterion = nn.CrossEntropyLoss()
+    decreasing_lr = list(map(int, args.decreasing_lr.split(",")))
+
+    optimizer = torch.optim.SGD(
+        model.parameters(),
+        args.lr,
+        momentum=args.momentum,
+        weight_decay=args.weight_decay,
+    )
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(
+        optimizer, milestones=decreasing_lr, gamma=0.1
+    )  # 0.1 is fixed
+
+    all_result = {}
+    all_result["train_ta"] = []
+    all_result["test_ta"] = []
+    all_result["val_ta"] = []
+
+    start_epoch = 0
+    state = 0
+
+    for epoch in range(start_epoch, args.epochs):
+        start_time = time.time()
+        print(optimizer.state_dict()["param_groups"][0]["lr"])
+        acc = train(train_loader, model, criterion, optimizer, epoch, args)
+
+        # evaluate on validation set
+        tacc = validate(val_loader, model, criterion, args)
+        # evaluate on test set
+        test_tacc = validate(test_loader, model, criterion, args)
+
+        scheduler.step()
+
+        all_result["train_ta"].append(acc)
+        all_result["val_ta"].append(tacc)
+        all_result["test_ta"].append(test_tacc)
+
+        print("one epoch duration:{}".format(time.time() - start_time))
+
+    print("Performance on the test data set")
+    test_tacc = validate(test_loader, model, criterion, args)
+    if len(all_result["val_ta"]) != 0:
+        val_pick_best_epoch = np.argmax(np.array(all_result["val_ta"]))
+        print(
+            "* best SA = {}, Epoch = {}".format(
+                all_result["test_ta"][val_pick_best_epoch], val_pick_best_epoch + 1
+            )
+        )
+
+    losses = utils.AverageMeter()
+    top1 = utils.AverageMeter()
+
+    model.eval()
 
     start = time.time()    
     if args.imagenet_arch:
@@ -38,32 +128,6 @@ def mix_SRL(data_loaders, model, criterion, optimizer, epoch, args):
                     epoch, i + 1, optimizer, one_epoch_step=len(forget_loader), args=args
                 )
 
-            # compute output
-            output_clean = model(image)
-
-            # random target, target size
-            target = (target + torch.randint(1, num_classes, target.shape, device=device)) % num_classes
-
-            loss = criterion(output_clean, target)
-            optimizer.zero_grad()
-            loss.backward()
-
-            # salUn
-            for idx_param, param in enumerate(model.parameters()):
-                mask = (torch.abs(param.grad) >= torch.quantile(torch.abs(param.grad), args.quantile, interpolation='midpoint'))
-                # imbriqué
-                mask_grad = mask * mask_grads[idx_param]
-                mask_grads[idx_param] = mask_grad
-
-            output = output_clean.float()
-            loss = loss.float()
-
-            # copy the grads
-            grads = []
-            for param in model.parameters():
-                grads.append(param.grad)
-            model.zero_grad()
-
             # compute loss and grad on the retain
             _, data = next(retain_loader_iter)
             image, target = get_x_y_from_data_dict(data, device)
@@ -71,21 +135,6 @@ def mix_SRL(data_loaders, model, criterion, optimizer, epoch, args):
             output_clean = model(image)
 
             loss = criterion(output_clean, target)
-            optimizer.zero_grad()
-            loss.backward()
-
-            Layer_ratio = []
-            for idx_param, param in enumerate(model.parameters()):
-                mask = param.grad * grads[idx_param] > 0
-                # imbriqué
-                mask_grad = mask * mask_grads[idx_param]
-                mask_grads[idx_param] = mask_grad
-                beta = args.beta
-                param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
-                layer_ratio = torch.sum(param.grad > 0)
-                Layer_ratio.append(layer_ratio)
-            print('Sum Masking Grad :', sum(Layer_ratio))
-            optimizer.step()
             
             # measure accuracy and record loss
             output = output_clean.float()
@@ -112,35 +161,6 @@ def mix_SRL(data_loaders, model, criterion, optimizer, epoch, args):
                     epoch, i + 1, optimizer, one_epoch_step=len(forget_loader), args=args
                 )
 
-            image = image.to(device)
-            target = target.to(device)
-
-            # random target, target size
-            target = (target + torch.randint(1, num_classes, target.shape, device=device)) % num_classes
-
-            # compute output
-            output_clean = model(image)
-
-            loss = criterion(output_clean, target)
-            optimizer.zero_grad()
-            loss.backward()
-
-            # salUn
-            for idx_param, param in enumerate(model.parameters()):
-                mask = (torch.abs(param.grad) >= torch.quantile(torch.abs(param.grad), args.quantile, interpolation='midpoint'))
-                # imbriqué
-                mask_grad = mask * mask_grads[idx_param]
-                mask_grads[idx_param] = mask_grad
-
-            output = output_clean.float()
-            loss = loss.float()
-
-            # copy the grads
-            grads = []
-            for param in model.parameters():
-                grads.append(param.grad)
-            model.zero_grad()
-
             # compute loss and grad on the retain
             _, data = next(retain_loader_iter)
             image, target = data[0].to(device), data[1].to(device)
@@ -148,23 +168,6 @@ def mix_SRL(data_loaders, model, criterion, optimizer, epoch, args):
             output_clean = model(image)
 
             loss = criterion(output_clean, target)
-            optimizer.zero_grad()
-            loss.backward()
-
-
-            Layer_ratio = []
-            for idx_param, param in enumerate(model.parameters()):
-                mask = param.grad * grads[idx_param] > 0
-                # imbriqué
-                mask_grad = mask * mask_grads[idx_param]
-                mask_grads[idx_param] = mask_grad
-                beta = args.beta
-                param.grad = mask_grad * (beta * param.grad + (1 - beta) * grads[idx_param])
-                layer_ratio = torch.sum(param.grad > 0)
-                Layer_ratio.append(layer_ratio)
-                
-            print('Sum Masking Grad :', sum(Layer_ratio))
-            optimizer.step()
 
             # measure accuracy and record loss
             output = output_clean.float()

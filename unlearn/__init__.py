@@ -17,6 +17,7 @@ from .barrier import barrier
 from .SalUn import SalUn
 from .mix_NGPlus import mix_NGPlus
 from .mix_SRL import mix_SRL
+from .ideal import ideal
 
 
 def raw(data_loaders, model, criterion, args):
@@ -71,5 +72,7 @@ def get_unlearn_method(name):
         return mix_NGPlus
     elif name == "mix_SRL":
         return mix_SRL
+    elif name == "ideal":
+        return ideal
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")
