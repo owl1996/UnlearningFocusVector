@@ -50,7 +50,6 @@ def ideal(data_loaders, model, criterion, optimizer, epoch, args):
         device = torch.device("cpu")
 
     print(device)
-    initalization = None
 
     os.makedirs(args.save_dir, exist_ok=True)
     if args.seed:
