@@ -3,6 +3,14 @@ from concurrent.futures import ThreadPoolExecutor
 import itertools
 
 # Liste de tes commandes sous forme de strings
+baseline_train_epochs = {
+    "cifar10": 20,
+    "cifar100": 60,
+    "tiny-imagenet": 200,
+    "svhn": 200,
+    "imagenet": 90,
+    "imagenet100": 90
+}
 
 base_script = "python -u mlflow_forget.py"
 
@@ -12,6 +20,8 @@ unlearn = ["NGPlus", "mask_NGPlus", "mix_NGPlus", "SRL", "mask_SRL", "mix_SRL", 
 unlearn_epochs = ["1", "2", "5"]
 beta = ["0.85", "0.9", "0.95"]
 quantile = ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6"]
+archs = ["resnet18"]
+seeds = ["1", "2", "3", "4", "5"]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
@@ -21,7 +31,8 @@ commands = [base_script
             + " --unlearn_lr 0.1"
             + " --data ./data"
             + " --dataset " + _dataset
-            for (_dataset, _mask, _unlearn, _unlearn_epochs) in itertools.product(dataset, mask, unlearn, unlearn_epochs) 
+            + " --seed " + _seed
+            for (_dataset, _mask, _unlearn, _unlearn_epochs, _seed) in itertools.product(dataset, mask, unlearn, unlearn_epochs, seeds) 
 ]
 
 new_commands = []
@@ -40,6 +51,15 @@ for command in commands:
         new_commands.append(command)
     
 print(new_commands)
+
+base_commands = ["python -u main_baseline.py"
+            + " --save_dir ./results/" + _dataset
+            + " --arch" + _arch
+            + " --data ./data"
+            + " --dataset " + _dataset
+            + " --seed " + _seed
+            + " --epochs " + baseline_train_epochs[_dataset]
+            for (_arch, _dataset, _seed) in itertools.product(archs, dataset, seeds)]
 
 def run_command(cmd):
     """Exécute une commande et gère les erreurs"""

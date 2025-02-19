@@ -1,0 +1,12 @@
+datasets
+einops
+lmdb
+matplotlib
+mlflow
+numpy
+Pillow
+scikit_learn
+six
+torch
+torchvision
+tqdm

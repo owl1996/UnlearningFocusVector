@@ -137,7 +137,7 @@ def main():
                 "init_weight": initalization,
             },
             is_SA_best=is_best_sa,
-            pruning=state,
+            pruning=args.arch,
             save_path=args.save_dir,
         )
 
