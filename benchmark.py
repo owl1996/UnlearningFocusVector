@@ -4,7 +4,7 @@ import itertools
 
 # Liste de tes commandes sous forme de strings
 baseline_train_epochs = {
-    "cifar10": 20,
+    "cifar10": 30,
     "cifar100": 60,
     "tiny-imagenet": 200,
     "svhn": 200,
@@ -14,14 +14,14 @@ baseline_train_epochs = {
 
 base_script = "python -u mlflow_forget.py"
 
-dataset = ["cifar100"]
+dataset = ["cifar10"]
 mask = ["/0model_SA_best.pth.tar"]
 unlearn = ["NGPlus", "mask_NGPlus", "mix_NGPlus", "SRL", "mask_SRL", "mix_SRL", "SalUn", "FT"]
-unlearn_epochs = ["1", "2", "5"]
-beta = ["0.85", "0.9", "0.95"]
-quantile = ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6"]
+unlearn_epochs = ["5"]
+beta = ["0.95"]
+quantile = ["0.4", "0.5", "0.6"]
 archs = ["resnet18"]
-seeds = ["1", "2", "3", "4", "5"]
+seeds = ["1"]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
@@ -52,14 +52,14 @@ for command in commands:
     
 print(new_commands)
 
-base_commands = ["python -u main_baseline.py"
-            + " --save_dir ./results/" + _dataset
-            + " --arch" + _arch
-            + " --data ./data"
-            + " --dataset " + _dataset
-            + " --seed " + _seed
-            + " --epochs " + baseline_train_epochs[_dataset]
-            for (_arch, _dataset, _seed) in itertools.product(archs, dataset, seeds)]
+# base_commands = ["python -u main_baseline.py"
+#             + " --save_dir ./results/" + _dataset
+#             + " --arch" + _arch
+#             + " --data ./data"
+#             + " --dataset " + _dataset
+#             + " --seed " + _seed
+#             + " --epochs " + baseline_train_epochs[_dataset]
+#             for (_arch, _dataset, _seed) in itertools.product(archs, dataset, seeds)]
 
 def run_command(cmd):
     """Exécute une commande et gère les erreurs"""

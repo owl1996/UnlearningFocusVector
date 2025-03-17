@@ -1,0 +1,9 @@
+python -u main_baseline.py --save_dir ./results/cifar10 --archresnet18 --data ./data --dataset cifar10 --seed 0 --epochs 30
+python -u mlflow_forget.py --save_dir ./results/cifar10 --mask ./results/cifar10/0model_SA_best.pth.tar --unlearn NGPlus --unlearn_epochs 5 --unlearn_lr 0.1 --data ./data --dataset cifar10 --seed 0 --beta 0.95
+python -u mlflow_forget.py --save_dir ./results/cifar10 --mask ./results/cifar10/0model_SA_best.pth.tar --unlearn mix_NGPlus --unlearn_epochs 5 --unlearn_lr 0.1 --data ./data --dataset cifar10 --seed 0 --beta 0.95 --quantile 0.4
+python -u mlflow_forget.py --save_dir ./results/cifar10 --mask ./results/cifar10/0model_SA_best.pth.tar --unlearn mix_NGPlus --unlearn_epochs 5 --unlearn_lr 0.1 --data ./data --dataset cifar10 --seed 0 --beta 0.95 --quantile 0.5
+python -u mlflow_forget.py --save_dir ./results/cifar10 --mask ./results/cifar10/0model_SA_best.pth.tar --unlearn mix_NGPlus --unlearn_epochs 5 --unlearn_lr 0.1 --data ./data --dataset cifar10 --seed 0 --beta 0.95 --quantile 0.6
+python -u mlflow_forget.py --save_dir ./results/cifar10 --mask ./results/cifar10/0model_SA_best.pth.tar --unlearn mask_SRL --unlearn_epochs 5 --unlearn_lr 0.1 --data ./data --dataset cifar10 --seed 0 --beta 0.95
+python -u mlflow_forget.py --save_dir ./results/cifar10 --mask ./results/cifar10/0model_SA_best.pth.tar --unlearn SalUn --unlearn_epochs 5 --unlearn_lr 0.1 --data ./data --dataset cifar10 --seed 0 --beta 0.95 --quantile 0.4
+python -u mlflow_forget.py --save_dir ./results/cifar10 --mask ./results/cifar10/0model_SA_best.pth.tar --unlearn SalUn --unlearn_epochs 5 --unlearn_lr 0.1 --data ./data --dataset cifar10 --seed 0 --beta 0.95 --quantile 0.5
+python -u mlflow_forget.py --save_dir ./results/cifar10 --mask ./results/cifar10/0model_SA_best.pth.tar --unlearn SalUn --unlearn_epochs 5 --unlearn_lr 0.1 --data ./data --dataset cifar10 --seed 0 --beta 0.95 --quantile 0.6
