@@ -1,6 +1,6 @@
 #!/bin/bash
 #OAR -n my_array_jobs
-#OAR -l /nodes=1/core=1,walltime=01:00:00
+#OAR -l /nodes=1/core=1/gpu=1,walltime=01:00:00
 #OAR -O output_%jobid%_%arrayid%.log
 #OAR -E error_%jobid%_%arrayid%.err
 
