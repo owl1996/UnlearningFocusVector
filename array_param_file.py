@@ -2,8 +2,8 @@ import itertools
 
 # Liste de tes commandes sous forme de strings
 baseline_train_epochs = {
-    "cifar10": 30,
-    "cifar100": 60,
+    "cifar10": 60,
+    "cifar100": 120,
     "tiny-imagenet": 200,
     "svhn": 200,
     "imagenet": 90,
@@ -19,7 +19,7 @@ unlearn_epochs = ["5"]
 beta = ["0.95"]
 quantile = ["0.4", "0.5", "0.6"]
 archs = ["resnet18"]
-seeds = ["0"]
+seeds = ["0", "1"]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
@@ -52,7 +52,7 @@ for command in commands:
 
 base_commands = ["python -u main_baseline.py"
             + " --save_dir ./results/" + _dataset
-            + " --arch" + _arch
+            + " --arch " + _arch
             + " --data ./data"
             + " --dataset " + _dataset
             + " --seed " + _seed
