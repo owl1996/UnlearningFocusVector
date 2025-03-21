@@ -12,6 +12,14 @@ fi
 
 PARAM_FILE="$1"
 
+# Vérifier si le fichier requirements.txt existe et installer les dépendances
+if [ -f "requirements.txt" ]; then
+    echo "Installation des dépendances Python depuis requirements.txt"
+    pip install -r requirements.txt
+else
+    echo "requirements.txt non trouvé, aucune installation des dépendances"
+fi
+
 # Lire la ligne correspondant à l'index du job (OAR_ARRAY_INDEX commence à 1)
 CMD=$(sed -n "${OAR_ARRAY_INDEX}p" "$PARAM_FILE")
 
