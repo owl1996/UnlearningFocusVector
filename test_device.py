@@ -9,10 +9,6 @@ else:
     device = torch.device("cpu")
 
 import torch
-print(torch.__version__)
-print(torch.backends.mps.is_available())  # Devrait retourner True
-print(device)
-
-import os
-rank = int(os.environ['RANK'])
-print("Mon NUM Worker est :", rank)
+print(f"torch version : {torch.__version__}")
+# print(torch.backends.mps.is_available())  # Devrait retourner True
+print(f"device : {device}")

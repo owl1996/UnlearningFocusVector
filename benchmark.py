@@ -5,7 +5,7 @@ import itertools
 # Liste de tes commandes sous forme de strings
 baseline_train_epochs = {
     "cifar10": 60,
-    "cifar100": 60,
+    "cifar100": 120,
     "tiny-imagenet": 200,
     "svhn": 200,
     "imagenet": 90,
@@ -14,7 +14,7 @@ baseline_train_epochs = {
 
 base_script = "python -u mlflow_forget.py"
 
-dataset = ["cifar10"]
+dataset = ["cifar10", "cifar100"]
 mask = ["model_SA_best.pth.tar"]
 unlearn = ["NGPlus", "mask_NGPlus", "mix_NGPlus", "SRL", "mask_SRL", "mix_SRL", "SalUn", "FT"]
 unlearn_epochs = ["1", "2", "5"]
@@ -50,7 +50,7 @@ for command in commands:
     else:
         new_commands.append(command)
     
-print(new_commands)
+# print(new_commands)
 
 base_commands = ["python -u main_baseline.py"
             + " --save_dir ./results/" + _dataset
@@ -82,7 +82,7 @@ def run_command(cmd):
 
 # Exécution parallèle (ajuster max_workers selon ton CPU)
 with ThreadPoolExecutor(max_workers=1) as executor:
-    results = executor.map(run_command, base_commands + new_commands)
+    results = executor.map(run_command, base_commands)
 
 # Vérification finale
 if all(results):
