@@ -10,7 +10,7 @@ baseline_train_epochs = {
     "imagenet100": 90
 }
 
-base_script = "python -u mlflow_forget.py"
+base_script = "-u mlflow_forget.py"
 
 dataset = ["cifar10", "cifar100"]
 mask = ["model_SA_best.pth.tar"]
@@ -50,7 +50,7 @@ for command in commands:
     
 
 
-base_commands = ["python -u main_baseline.py"
+base_commands = ["-u main_baseline.py"
             + " --save_dir ./results/" + _dataset
             + " --arch " + _arch
             + " --data ./data"
