@@ -1,14 +1,13 @@
 """
     main process for a Lottery Tickets experiments
 """
-import argparse
 import os
-import pdb
-import pickle
-import random
-import shutil
-import time
-from copy import deepcopy
+# import pdb
+# import pickle
+# import random
+# import shutil
+# import time
+# from copy import deepcopy
 
 import matplotlib.pyplot as plt
 import numpy as np
