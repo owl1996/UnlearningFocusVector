@@ -36,6 +36,10 @@ def main():
     args = arg_parser.parse_args()
     print(args)
 
+    if str(args.seed) + str(args.arch) + str(args.epochs) + "model_SA_best.pth.tar" in os.listdir(args.save_dir):
+        print("This experiment has been done before, skip")
+        return
+
     if torch.cuda.is_available():
         torch.cuda.set_device(int(args.gpu))
         device = torch.device(f"cuda:{int(args.gpu)}")

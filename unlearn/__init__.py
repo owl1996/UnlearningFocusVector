@@ -1,7 +1,5 @@
 from .fisher import fisher, fisher_new
 from .FT import FT, FT_l1
-from .FT_prune import FT_prune
-from .FT_prune_bi import FT_prune_bi
 from .GA import GA, GA_l1
 from .impl import load_unlearn_checkpoint, save_unlearn_checkpoint
 from .retrain import retrain
@@ -44,10 +42,6 @@ def get_unlearn_method(name):
         return fisher_new
     elif name == "wfisher":
         return Wfisher
-    elif name == "FT_prune":
-        return FT_prune
-    elif name == "FT_prune_bi":
-        return FT_prune_bi
     elif name == "GA_l1":
         return GA_l1
     elif name == "retrain_ls":

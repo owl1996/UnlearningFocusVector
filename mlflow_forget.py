@@ -9,13 +9,11 @@ import torch.utils.data
 
 import arg_parser
 import evaluation
-import pruner
-import unlearn
 import utils
 from trainer import validate
 from time import time
-
 import mlflow
+import unlearn
 
 def main():
     args = arg_parser.parse_args()
@@ -152,9 +150,6 @@ def main():
         checkpoint = torch.load(args.mask, map_location=device, weights_only = False)
         if "state_dict" in checkpoint.keys():
             checkpoint = checkpoint["state_dict"]
-        current_mask = pruner.extract_mask(checkpoint)
-        pruner.prune_model_custom(model, current_mask)
-        pruner.check_sparsity(model)
 
         mlflow.log_param("unlearn_method", args.unlearn)
 

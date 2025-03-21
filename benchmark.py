@@ -14,7 +14,7 @@ baseline_train_epochs = {
 
 base_script = "python -u mlflow_forget.py"
 
-dataset = ["cifar10", "cifar100"]
+dataset = ["cifar10"]
 mask = ["model_SA_best.pth.tar"]
 unlearn = ["NGPlus", "mask_NGPlus", "mix_NGPlus", "SRL", "mask_SRL", "mix_SRL", "SalUn", "FT"]
 unlearn_epochs = ["1", "2", "5"]
@@ -25,14 +25,14 @@ seeds = ["0", "1"]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
-            + " --mask ./results/" + _dataset + "/" + _seed + _mask
+            + " --mask ./results/" + _dataset + "/" + _seed + _arch + str(baseline_train_epochs[_dataset]) + _mask
             + " --unlearn " + _unlearn
             + " --unlearn_epochs " + _unlearn_epochs
             + " --unlearn_lr 0.1"
             + " --data ./data"
             + " --dataset " + _dataset
             + " --seed " + _seed
-            for (_dataset, _mask, _unlearn, _unlearn_epochs, _seed) in itertools.product(dataset, mask, unlearn, unlearn_epochs, seeds) 
+            for (_dataset, _mask, _unlearn, _unlearn_epochs, _seed, _arch) in itertools.product(dataset, mask, unlearn, unlearn_epochs, seeds, archs) 
 ]
 
 new_commands = []
@@ -82,7 +82,7 @@ def run_command(cmd):
 
 # Exécution parallèle (ajuster max_workers selon ton CPU)
 with ThreadPoolExecutor(max_workers=1) as executor:
-    results = executor.map(run_command, base_commands)
+    results = executor.map(run_command, base_commands + new_commands)
 
 # Vérification finale
 if all(results):
