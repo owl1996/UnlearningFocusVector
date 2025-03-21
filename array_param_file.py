@@ -12,14 +12,14 @@ baseline_train_epochs = {
 
 base_script = "python -u mlflow_forget.py"
 
-dataset = ["cifar10"]
+dataset = ["cifar10", "cifar100"]
 mask = ["model_SA_best.pth.tar"]
 unlearn = ["NGPlus", "mask_NGPlus", "mix_NGPlus", "SRL", "mask_SRL", "mix_SRL", "SalUn", "FT"]
 unlearn_epochs = ["5"]
 beta = ["0.95"]
 quantile = ["0.4", "0.5", "0.6"]
 archs = ["resnet18"]
-seeds = ["0", "1"]
+seeds = ["0", "1", "2"]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
@@ -61,7 +61,7 @@ base_commands = ["python -u main_baseline.py"
 
 
 
-commands = base_commands + new_commands
+commands = base_commands
 print(commands)
 
 file_name = "params.txt"
