@@ -4,7 +4,7 @@ import itertools
 
 # Liste de tes commandes sous forme de strings
 baseline_train_epochs = {
-    "cifar10": 30,
+    "cifar10": 60,
     "cifar100": 60,
     "tiny-imagenet": 200,
     "svhn": 200,
@@ -15,17 +15,17 @@ baseline_train_epochs = {
 base_script = "python -u mlflow_forget.py"
 
 dataset = ["cifar10"]
-mask = ["/0model_SA_best.pth.tar"]
+mask = ["model_SA_best.pth.tar"]
 unlearn = ["NGPlus", "mask_NGPlus", "mix_NGPlus", "SRL", "mask_SRL", "mix_SRL", "SalUn", "FT"]
-unlearn_epochs = ["5"]
+unlearn_epochs = ["1", "2", "5"]
 beta = ["0.95"]
-quantile = ["0.4", "0.5", "0.6"]
+quantile = ["0.4", "0.5"]
 archs = ["resnet18"]
-seeds = ["1"]
+seeds = ["0", "1"]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
-            + " --mask ./results/" + _dataset + _mask
+            + " --mask ./results/" + _dataset + "/" + _seed + _mask
             + " --unlearn " + _unlearn
             + " --unlearn_epochs " + _unlearn_epochs
             + " --unlearn_lr 0.1"
@@ -52,14 +52,14 @@ for command in commands:
     
 print(new_commands)
 
-# base_commands = ["python -u main_baseline.py"
-#             + " --save_dir ./results/" + _dataset
-#             + " --arch" + _arch
-#             + " --data ./data"
-#             + " --dataset " + _dataset
-#             + " --seed " + _seed
-#             + " --epochs " + baseline_train_epochs[_dataset]
-#             for (_arch, _dataset, _seed) in itertools.product(archs, dataset, seeds)]
+base_commands = ["python -u main_baseline.py"
+            + " --save_dir ./results/" + _dataset
+            + " --arch " + _arch
+            + " --data ./data"
+            + " --dataset " + _dataset
+            + " --seed " + _seed
+            + " --epochs " + str(baseline_train_epochs[_dataset])
+            for (_arch, _dataset, _seed) in itertools.product(archs, dataset, seeds)]
 
 def run_command(cmd):
     """Exécute une commande et gère les erreurs"""
@@ -82,10 +82,10 @@ def run_command(cmd):
 
 # Exécution parallèle (ajuster max_workers selon ton CPU)
 with ThreadPoolExecutor(max_workers=1) as executor:
-    results = executor.map(run_command, new_commands)
+    results = executor.map(run_command, base_commands + new_commands)
 
 # Vérification finale
 if all(results):
-    print("\nToutes les commandes ont réussi !")
+    print(f"\nToutes les {len(new_commands)} commandes ont réussi !")
 else:
     print("\nCertaines commandes ont échoué, vérifie les logs ci-dessus.")
