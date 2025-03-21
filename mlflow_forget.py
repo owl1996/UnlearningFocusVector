@@ -69,24 +69,24 @@ def main():
     if args.dataset == "svhn":
         try:
             marked = forget_dataset.targets < 0
-        except:
+        except AttributeError:
             marked = forget_dataset.labels < 0
         forget_dataset.data = forget_dataset.data[marked]
         try:
             forget_dataset.targets = -forget_dataset.targets[marked] - 1
-        except:
+        except AttributeError:
             forget_dataset.labels = -forget_dataset.labels[marked] - 1
         forget_loader = replace_loader_dataset(forget_dataset, seed=seed, shuffle=True)
         print(len(forget_dataset))
         retain_dataset = copy.deepcopy(marked_loader.dataset)
         try:
             marked = retain_dataset.targets >= 0
-        except:
+        except AttributeError:
             marked = retain_dataset.labels >= 0
         retain_dataset.data = retain_dataset.data[marked]
         try:
             retain_dataset.targets = retain_dataset.targets[marked]
-        except:
+        except AttributeError:
             retain_dataset.labels = retain_dataset.labels[marked]
         retain_loader = replace_loader_dataset(retain_dataset, seed=seed, shuffle=True)
         print(len(retain_dataset))
@@ -113,7 +113,7 @@ def main():
             assert len(forget_dataset) + len(retain_dataset) == len(
                 train_loader_full.dataset
             )
-        except:
+        except AttributeError:
             marked = forget_dataset.targets < 0
             forget_dataset.imgs = forget_dataset.imgs[marked]
             forget_dataset.targets = -forget_dataset.targets[marked] - 1
@@ -193,6 +193,7 @@ def main():
     if "SVC_MIA_forget_efficacy" not in evaluation_result:
         test_len = len(test_loader.dataset)
         forget_len = len(forget_dataset)
+        print(forget_len)
         retain_len = len(retain_dataset)
 
         utils.dataset_convert_to_test(retain_dataset, args)
