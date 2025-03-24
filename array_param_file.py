@@ -1,5 +1,3 @@
-import subprocess
-from concurrent.futures import ThreadPoolExecutor
 import itertools
 import os
 
@@ -77,9 +75,13 @@ ideal_commands = ["-u mlflow_forget.py"
             for (_arch, _dataset, _seed) in itertools.product(archs, dataset, seeds)
             if "ideal" + "_uep" + str(baseline_train_epochs[_dataset]) + "_s" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset]) + "checkpoint.pth.tar" not in os.listdir("./results/" + _dataset)]
 
-commands = base_commands + ideal_commands + new_commands
+file_name = "base_params.txt"
+
+with open(file_name, "w") as f:
+    for commande in base_commands + ideal_commands:
+        f.write(commande + "\n")
 
 file_name = "params.txt"
 with open(file_name, "w") as f:
-    for commande in commands:
+    for commande in new_commands:
         f.write(commande + "\n")
