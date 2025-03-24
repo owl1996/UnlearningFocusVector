@@ -1,10 +1,13 @@
+import subprocess
+from concurrent.futures import ThreadPoolExecutor
 import itertools
+import os
 
 # Liste de tes commandes sous forme de strings
 baseline_train_epochs = {
-    "cifar10": 60,
-    "cifar100": 120,
-    "tiny-imagenet": 200,
+    "cifar10": 100,
+    "cifar100": 100,
+    "tiny-imagenet": 1,
     "svhn": 200,
     "imagenet": 90,
     "imagenet100": 90
@@ -13,24 +16,26 @@ baseline_train_epochs = {
 base_script = "-u mlflow_forget.py"
 
 dataset = ["cifar10", "cifar100"]
-mask = ["model_SA_best.pth.tar"]
 unlearn = ["NGPlus", "mask_NGPlus", "mix_NGPlus", "SRL", "mask_SRL", "mix_SRL", "SalUn", "FT"]
-unlearn_epochs = ["5"]
-beta = ["0.95"]
-quantile = ["0.4", "0.5", "0.6"]
-archs = ["resnet18"]
-seeds = ["0", "1", "2"]
+unlearn_epochs = ["1", "2", "3", "5", "10"]
+beta = ["0.85", "0.9", "0.95"]
+quantile = ["0.3", "0.4", "0.5", "0.6"]
+# archs = ["vgg16_bn", "resnet18"]
+archs = ["resnet18", "vgg16_bn"]
+seeds = ["0", "1", "2", "3", "4"]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
-            + " --mask ./results/" + _dataset + "/" + str(_seed) + _mask
+            + " --mask ./results/" + _dataset + "/" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset]) + "model_SA_best.pth.tar"
             + " --unlearn " + _unlearn
             + " --unlearn_epochs " + _unlearn_epochs
             + " --unlearn_lr 0.1"
             + " --data ./data"
             + " --dataset " + _dataset
             + " --seed " + _seed
-            for (_dataset, _mask, _unlearn, _unlearn_epochs, _seed) in itertools.product(dataset, mask, unlearn, unlearn_epochs, seeds) 
+            + " --arch " + _arch
+            + " --epochs " + str(baseline_train_epochs[_dataset])
+            for (_dataset, _unlearn, _unlearn_epochs, _seed, _arch) in itertools.product(dataset, unlearn, unlearn_epochs, seeds, archs) 
 ]
 
 new_commands = []
@@ -48,7 +53,7 @@ for command in commands:
     else:
         new_commands.append(command)
     
-
+# print(new_commands)
 
 base_commands = ["-u main_baseline.py"
             + " --save_dir ./results/" + _dataset
@@ -59,10 +64,20 @@ base_commands = ["-u main_baseline.py"
             + " --epochs " + str(baseline_train_epochs[_dataset])
             for (_arch, _dataset, _seed) in itertools.product(archs, dataset, seeds)]
 
+ideal_commands = ["-u mlflow_forget.py"
+            + " --save_dir ./results/" + _dataset
+            + " --unlearn ideal"
+            + " --unlearn_epochs " + str(baseline_train_epochs[_dataset])
+            + " --unlearn_lr 0.1"
+            + " --data ./data"
+            + " --dataset " + _dataset
+            + " --seed " + _seed
+            + " --arch " + _arch
+            + " --epochs " + str(baseline_train_epochs[_dataset])
+            for (_arch, _dataset, _seed) in itertools.product(archs, dataset, seeds)
+            if "ideal" + "_uep" + str(baseline_train_epochs[_dataset]) + "_s" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset]) + "checkpoint.pth.tar" not in os.listdir("./results/" + _dataset)]
 
-
-commands = base_commands
-print(commands)
+commands = base_commands + ideal_commands + new_commands
 
 file_name = "params.txt"
 with open(file_name, "w") as f:

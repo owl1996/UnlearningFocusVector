@@ -17,12 +17,12 @@ base_script = "python -u mlflow_forget.py"
 
 dataset = ["cifar10", "cifar100"]
 unlearn = ["NGPlus", "mask_NGPlus", "mix_NGPlus", "SRL", "mask_SRL", "mix_SRL", "SalUn", "FT"]
-unlearn_epochs = ["1", "2", "5"]
-beta = ["0.95"]
-quantile = ["0.4", "0.5"]
+unlearn_epochs = ["1", "2", "3", "5", "10"]
+beta = ["0.85", "0.9", "0.95"]
+quantile = ["0.3", "0.4", "0.5", "0.6"]
 # archs = ["vgg16_bn", "resnet18"]
-archs = ["resnet18"]
-seeds = ["0", "1"]
+archs = ["resnet18", "vgg16_bn"]
+seeds = ["0", "1", "2", "3", "4"]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
