@@ -25,12 +25,12 @@ def plot_training_curve(training_result, save_dir, prefix):
 
 def save_unlearn_checkpoint(model, evaluation_result, args):
     state = {"state_dict": model.state_dict(), "evaluation_result": evaluation_result}
-    utils.save_checkpoint(state, False, args.save_dir, args.unlearn)
+    utils.save_checkpoint(state, False, args.save_dir, pruning = str(args.unlearn) + "_uep" + str(args.unlearn_epochs) + "_s" + str(args.seed) + str(args.arch) + "_ep" + str(args.epochs))
     utils.save_checkpoint(
         evaluation_result,
         False,
         args.save_dir,
-        args.unlearn,
+        pruning = str(args.unlearn) + "_uep" + str(args.unlearn_epochs) + "_s" + str(args.seed) + str(args.arch) + "_ep" + str(args.epochs),
         filename="eval_result.pth.tar",
     )
 

@@ -6,7 +6,7 @@ import os
 # import pickle
 # import random
 # import shutil
-# import time
+import time
 # from copy import deepcopy
 
 import matplotlib.pyplot as plt
@@ -35,8 +35,9 @@ def main():
     args = arg_parser.parse_args()
     print(args)
 
-    if str(args.seed) + str(args.arch) + str(args.epochs) + "model_SA_best.pth.tar" in os.listdir(args.save_dir):
-        print("This experiment has been done before, skip")
+    model_tag = str(args.seed) + str(args.arch) + "_ep" + str(args.epochs)
+    if model_tag + "model_SA_best.pth.tar" in os.listdir(args.save_dir):
+        print(f"The {model_tag} has already been trained, skip")
         return
 
     if torch.cuda.is_available():
@@ -140,7 +141,7 @@ def main():
                 "init_weight": initalization,
             },
             is_SA_best=is_best_sa,
-            pruning = str(args.seed) + str(args.arch) + str(args.epochs),
+            pruning = str(args.seed) + str(args.arch) + "_ep" + str(args.epochs),
             save_path=args.save_dir,
         )
 

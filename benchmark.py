@@ -1,12 +1,13 @@
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 import itertools
+import os
 
 # Liste de tes commandes sous forme de strings
 baseline_train_epochs = {
-    "cifar10": 60,
-    "cifar100": 120,
-    "tiny-imagenet": 200,
+    "cifar10": 100,
+    "cifar100": 100,
+    "tiny-imagenet": 1,
     "svhn": 200,
     "imagenet": 90,
     "imagenet100": 90
@@ -14,25 +15,27 @@ baseline_train_epochs = {
 
 base_script = "python -u mlflow_forget.py"
 
-dataset = ["cifar10"]
-mask = ["model_SA_best.pth.tar"]
+dataset = ["cifar10", "cifar100"]
 unlearn = ["NGPlus", "mask_NGPlus", "mix_NGPlus", "SRL", "mask_SRL", "mix_SRL", "SalUn", "FT"]
 unlearn_epochs = ["1", "2", "5"]
 beta = ["0.95"]
 quantile = ["0.4", "0.5"]
+# archs = ["vgg16_bn", "resnet18"]
 archs = ["resnet18"]
 seeds = ["0", "1"]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
-            + " --mask ./results/" + _dataset + "/" + _seed + _arch + str(baseline_train_epochs[_dataset]) + _mask
+            + " --mask ./results/" + _dataset + "/" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset]) + "model_SA_best.pth.tar"
             + " --unlearn " + _unlearn
             + " --unlearn_epochs " + _unlearn_epochs
             + " --unlearn_lr 0.1"
             + " --data ./data"
             + " --dataset " + _dataset
             + " --seed " + _seed
-            for (_dataset, _mask, _unlearn, _unlearn_epochs, _seed, _arch) in itertools.product(dataset, mask, unlearn, unlearn_epochs, seeds, archs) 
+            + " --arch " + _arch
+            + " --epochs " + str(baseline_train_epochs[_dataset])
+            for (_dataset, _unlearn, _unlearn_epochs, _seed, _arch) in itertools.product(dataset, unlearn, unlearn_epochs, seeds, archs) 
 ]
 
 new_commands = []
@@ -61,6 +64,23 @@ base_commands = ["python -u main_baseline.py"
             + " --epochs " + str(baseline_train_epochs[_dataset])
             for (_arch, _dataset, _seed) in itertools.product(archs, dataset, seeds)]
 
+ideal_commands = ["python -u mlflow_forget.py"
+            + " --save_dir ./results/" + _dataset
+            + " --unlearn ideal"
+            + " --unlearn_epochs " + str(baseline_train_epochs[_dataset])
+            + " --unlearn_lr 0.1"
+            + " --data ./data"
+            + " --dataset " + _dataset
+            + " --seed " + _seed
+            + " --arch " + _arch
+            + " --epochs " + str(baseline_train_epochs[_dataset])
+            for (_arch, _dataset, _seed) in itertools.product(archs, dataset, seeds)
+            if "ideal" + "_uep" + str(baseline_train_epochs[_dataset]) + "_s" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset]) + "checkpoint.pth.tar" not in os.listdir("./results/" + _dataset)]
+
+commands = base_commands + ideal_commands + new_commands
+
+# print(ideal_commands)
+
 def run_command(cmd):
     """Exécute une commande et gère les erreurs"""
     try:
@@ -82,10 +102,10 @@ def run_command(cmd):
 
 # Exécution parallèle (ajuster max_workers selon ton CPU)
 with ThreadPoolExecutor(max_workers=1) as executor:
-    results = executor.map(run_command, base_commands + new_commands)
+    results = executor.map(run_command, commands)
 
 # Vérification finale
 if all(results):
-    print(f"\nToutes les {len(new_commands)} commandes ont réussi !")
+    print(f"\nToutes les {len(commands)} commandes ont réussi !")
 else:
     print("\nCertaines commandes ont échoué, vérifie les logs ci-dessus.")
