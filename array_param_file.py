@@ -4,7 +4,7 @@ import os
 # Liste de tes commandes sous forme de strings
 baseline_train_epochs = {
     "cifar10": 100,
-    "cifar100": 100,
+    "cifar100": 120,
     "tiny-imagenet": 1,
     "svhn": 200,
     "imagenet": 90,
@@ -13,12 +13,11 @@ baseline_train_epochs = {
 
 base_script = "-u mlflow_forget.py"
 
-dataset = ["cifar10"]
+dataset = ["cifar100"]
 unlearn = ["NGPlus", "mix_NGPlus", "SRL", "mix_SRL", "SalUn", "FT"]
 unlearn_epochs = ["1", "5", "10"]
 beta = ["0.9", "0.95"]
 quantile = ["0.3", "0.5"]
-# archs = ["vgg16_bn", "resnet18"]
 archs = ["resnet18", "vgg16_bn"]
 seeds = ["0", "1", "2"]
 
@@ -81,7 +80,37 @@ with open(file_name, "w") as f:
     for commande in base_commands + ideal_commands:
         f.write(commande + "\n")
 
+nothing_commands = [base_script
+            + " --save_dir ./results/" + _dataset
+            + " --mask ./results/" + _dataset + "/" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset]) + "model_SA_best.pth.tar"
+            + " --unlearn nothing"
+            + " --unlearn_epochs 1"
+            + " --unlearn_lr 0.1"
+            + " --data ./data"
+            + " --dataset " + _dataset
+            + " --seed " + _seed
+            + " --arch " + _arch
+            + " --epochs " + str(baseline_train_epochs[_dataset])
+            for (_dataset, _seed, _arch) in itertools.product(dataset, seeds, archs)
+]
+
+ideal_nothing_commands =  [base_script
+            + " --save_dir ./results/" + _dataset
+            + " --mask ./results/" + _dataset + "/ideal" + "_uep" + str(baseline_train_epochs[_dataset]) + "_s" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset])
+            + " --unlearn nothing"
+            + " --unlearn_epochs 1"
+            + " --unlearn_lr 0.1"
+            + " --data ./data"
+            + " --dataset " + _dataset
+            + " --seed " + _seed
+            + " --arch " + _arch
+            + " --epochs " + str(baseline_train_epochs[_dataset])
+            for (_dataset, _seed, _arch) in itertools.product(dataset, seeds, archs) 
+]
+
+print(nothing_commands + ideal_nothing_commands)
+
 file_name = "params.txt"
 with open(file_name, "w") as f:
-    for commande in new_commands:
+    for commande in new_commands + nothing_commands + ideal_nothing_commands:
         f.write(commande + "\n")
