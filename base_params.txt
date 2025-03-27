@@ -4,9 +4,3 @@
 -u main_baseline.py --save_dir ./results/cifar100 --arch vgg16_bn --data ./data --dataset cifar100 --seed 0 --epochs 120
 -u main_baseline.py --save_dir ./results/cifar100 --arch vgg16_bn --data ./data --dataset cifar100 --seed 1 --epochs 120
 -u main_baseline.py --save_dir ./results/cifar100 --arch vgg16_bn --data ./data --dataset cifar100 --seed 2 --epochs 120
--u mlflow_forget.py --save_dir ./results/cifar100 --unlearn ideal --unlearn_epochs 120 --unlearn_lr 0.1 --data ./data --dataset cifar100 --seed 0 --arch resnet18 --epochs 120
--u mlflow_forget.py --save_dir ./results/cifar100 --unlearn ideal --unlearn_epochs 120 --unlearn_lr 0.1 --data ./data --dataset cifar100 --seed 1 --arch resnet18 --epochs 120
--u mlflow_forget.py --save_dir ./results/cifar100 --unlearn ideal --unlearn_epochs 120 --unlearn_lr 0.1 --data ./data --dataset cifar100 --seed 2 --arch resnet18 --epochs 120
--u mlflow_forget.py --save_dir ./results/cifar100 --unlearn ideal --unlearn_epochs 120 --unlearn_lr 0.1 --data ./data --dataset cifar100 --seed 0 --arch vgg16_bn --epochs 120
--u mlflow_forget.py --save_dir ./results/cifar100 --unlearn ideal --unlearn_epochs 120 --unlearn_lr 0.1 --data ./data --dataset cifar100 --seed 1 --arch vgg16_bn --epochs 120
--u mlflow_forget.py --save_dir ./results/cifar100 --unlearn ideal --unlearn_epochs 120 --unlearn_lr 0.1 --data ./data --dataset cifar100 --seed 2 --arch vgg16_bn --epochs 120

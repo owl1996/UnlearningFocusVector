@@ -63,6 +63,7 @@ base_commands = ["-u main_baseline.py"
 
 ideal_commands = ["-u mlflow_forget.py"
             + " --save_dir ./results/" + _dataset
+            + " --mask ./results/" + _dataset + "/" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset]) + "model_SA_best.pth.tar"
             + " --unlearn ideal"
             + " --unlearn_epochs " + str(baseline_train_epochs[_dataset])
             + " --unlearn_lr 0.1"
@@ -77,7 +78,13 @@ ideal_commands = ["-u mlflow_forget.py"
 file_name = "base_params.txt"
 
 with open(file_name, "w") as f:
-    for commande in base_commands + ideal_commands:
+    for commande in base_commands:
+        f.write(commande + "\n")
+
+file_name = "ideal_params.txt"
+
+with open(file_name, "w") as f:
+    for commande in ideal_commands:
         f.write(commande + "\n")
 
 nothing_commands = [base_script
