@@ -33,6 +33,7 @@ def main():
 
     # Log input arguments
     mlflow.log_param("save_dir", args.save_dir)
+    mlflow.log_param("model", args.mask)
     mlflow.log_param("unlearn", args.unlearn)
     mlflow.log_param("num_indexes_to_replace", args.num_indexes_to_replace)
     mlflow.log_param("unlearn_epochs", args.unlearn_epochs)

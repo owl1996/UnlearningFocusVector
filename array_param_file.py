@@ -75,17 +75,6 @@ ideal_commands = ["-u mlflow_forget.py"
             for (_arch, _dataset, _seed) in itertools.product(archs, dataset, seeds)
             if "ideal" + "_uep" + str(baseline_train_epochs[_dataset]) + "_s" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset]) + "checkpoint.pth.tar" not in os.listdir("./results/" + _dataset)]
 
-file_name = "base_params.txt"
-
-with open(file_name, "w") as f:
-    for commande in base_commands:
-        f.write(commande + "\n")
-
-file_name = "ideal_params.txt"
-
-with open(file_name, "w") as f:
-    for commande in ideal_commands:
-        f.write(commande + "\n")
 
 nothing_commands = [base_script
             + " --save_dir ./results/" + _dataset
@@ -116,6 +105,19 @@ ideal_nothing_commands =  [base_script
 ]
 
 print(nothing_commands + ideal_nothing_commands)
+
+file_name = "base_params.txt"
+
+with open(file_name, "w") as f:
+    for commande in base_commands + nothing_commands:
+        f.write(commande + "\n")
+
+file_name = "ideal_params.txt"
+
+with open(file_name, "w") as f:
+    for commande in ideal_commands + ideal_nothing_commands:
+        f.write(commande + "\n")
+
 
 file_name = "params.txt"
 with open(file_name, "w") as f:
