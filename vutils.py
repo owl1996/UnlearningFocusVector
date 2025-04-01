@@ -52,7 +52,7 @@ def update_param(model, forget_grads, retain_grads, Masks = []):
             max_perc_param = perc_param
     return max_perc_param, masks
 
-def get_grads(model, softmax, forget_input, retain_input, device=device, verbose=False):
+def get_grads(model, softmax, forget_input, retain_input, device, verbose=False):
     r_input_tensor, r_label_tensor = retain_input[0].to(device), retain_input[1].to(device)
     # Attention !
     # On a retiré une classe
@@ -91,9 +91,38 @@ def get_grads(model, softmax, forget_input, retain_input, device=device, verbose
     
     return f_grads, r_grads
 
-def unlearn_step(model, softmax, forget_input, retain_input, optimizer, device=device, Masks=[]):
+def unlearn_step(model, softmax, forget_input, retain_input, optimizer, device, Masks=[]):
     optimizer.zero_grad()
     f_grads, r_grads = get_grads(model, softmax, forget_input, retain_input, verbose=False)
     max_perc_param, masks = update_param(model, f_grads, r_grads, Masks=Masks)
     optimizer.step()
     return max_perc_param, masks
+
+from torch.func import vmap, grad, functional_call  # Nouvelle API PyTorch 2.x
+
+
+def get_grad_mean_var(model, criterion, x, y):
+    # Fonction qui retourne la loss pour un seul échantillon
+    def compute_loss(params, buffers, x_sample, y_sample):
+        output = functional_call(model, params, (x_sample.unsqueeze(0),))  # Passage avant avec params donnés
+        return criterion(output, y_sample.unsqueeze(0))  # Perte
+
+    # Obtenir les paramètres du modèle sous forme de dictionnaire
+    params = {name: param for name, param in model.named_parameters()}
+    buffers = {name: buffer for name, buffer in model.named_buffers()}  # Pour les modules comme BatchNorm
+
+    # Calcul du gradient de la loss par rapport aux paramètres
+    compute_grad = grad(compute_loss)
+
+    # Vectoriser pour tout le batch
+    batched_grads = vmap(compute_grad, (None, None, 0, 0))(params, buffers, x, y)
+
+    # Calcul de la variance des gradients
+    gradient_variance = {name: torch.var(batched_grads[name], dim=0)
+                         for name in batched_grads.keys()}
+
+    # Calcul de la moyenne des gradients
+    gradient_mean = {name: torch.mean(batched_grads[name], dim=0)
+                         for name in batched_grads.keys()}
+
+    return gradient_mean, gradient_variance
