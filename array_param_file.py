@@ -24,7 +24,7 @@ unlearn_epochs = ["1", "5", "10"]
 beta = ["0.9", "0.95"]
 quantile = ["0.3", "0.5"]
 archs = ["resnet18", "vgg16_bn"]
-seeds = ["0", "1", "2"]
+seeds = ["1", "2", "3"]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset

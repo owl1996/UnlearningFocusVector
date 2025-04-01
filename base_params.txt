@@ -1,6 +1,6 @@
--u main_baseline.py --save_dir ./results/cifar100 --arch resnet18 --data ./data --dataset cifar100 --seed 0 --epochs 120
 -u main_baseline.py --save_dir ./results/cifar100 --arch resnet18 --data ./data --dataset cifar100 --seed 1 --epochs 120
 -u main_baseline.py --save_dir ./results/cifar100 --arch resnet18 --data ./data --dataset cifar100 --seed 2 --epochs 120
--u main_baseline.py --save_dir ./results/cifar100 --arch vgg16_bn --data ./data --dataset cifar100 --seed 0 --epochs 120
+-u main_baseline.py --save_dir ./results/cifar100 --arch resnet18 --data ./data --dataset cifar100 --seed 3 --epochs 120
 -u main_baseline.py --save_dir ./results/cifar100 --arch vgg16_bn --data ./data --dataset cifar100 --seed 1 --epochs 120
 -u main_baseline.py --save_dir ./results/cifar100 --arch vgg16_bn --data ./data --dataset cifar100 --seed 2 --epochs 120
+-u main_baseline.py --save_dir ./results/cifar100 --arch vgg16_bn --data ./data --dataset cifar100 --seed 3 --epochs 120
