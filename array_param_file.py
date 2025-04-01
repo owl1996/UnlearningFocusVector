@@ -118,17 +118,21 @@ print(nothing_commands + ideal_nothing_commands)
 file_name = "base_params.txt"
 
 with open(file_name, "w") as f:
-    for commande in base_commands + nothing_commands:
+    for commande in base_commands:
         f.write(commande + "\n")
 
 file_name = "ideal_params.txt"
 
 with open(file_name, "w") as f:
-    for commande in ideal_commands + ideal_nothing_commands:
+    for commande in ideal_commands:
         f.write(commande + "\n")
 
+file_name = "evals.txt"
+with open(file_name, "w") as f:
+    for commande in nothing_commands + ideal_nothing_commands:
+        f.write(commande + "\n")
 
 file_name = "params.txt"
 with open(file_name, "w") as f:
-    for commande in new_commands + nothing_commands + ideal_nothing_commands:
+    for commande in new_commands:
         f.write(commande + "\n")

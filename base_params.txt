@@ -4,9 +4,3 @@
 -u main_baseline.py --save_dir ./results/cifar100 --arch vgg16_bn --data ./data --dataset cifar100 --seed 0 --epochs 120
 -u main_baseline.py --save_dir ./results/cifar100 --arch vgg16_bn --data ./data --dataset cifar100 --seed 1 --epochs 120
 -u main_baseline.py --save_dir ./results/cifar100 --arch vgg16_bn --data ./data --dataset cifar100 --seed 2 --epochs 120
--u mlflow_forget.py --save_dir ./results/cifar100 --mask ./results/cifar100/0resnet18_ep120model_SA_best.pth.tar --unlearn nothing --unlearn_epochs 1 --unlearn_lr 0.1 --data ./data --dataset cifar100 --seed 0 --arch resnet18 --epochs 120 --num_indexes_to_replace 450
--u mlflow_forget.py --save_dir ./results/cifar100 --mask ./results/cifar100/0vgg16_bn_ep120model_SA_best.pth.tar --unlearn nothing --unlearn_epochs 1 --unlearn_lr 0.1 --data ./data --dataset cifar100 --seed 0 --arch vgg16_bn --epochs 120 --num_indexes_to_replace 450
--u mlflow_forget.py --save_dir ./results/cifar100 --mask ./results/cifar100/1resnet18_ep120model_SA_best.pth.tar --unlearn nothing --unlearn_epochs 1 --unlearn_lr 0.1 --data ./data --dataset cifar100 --seed 1 --arch resnet18 --epochs 120 --num_indexes_to_replace 450
--u mlflow_forget.py --save_dir ./results/cifar100 --mask ./results/cifar100/1vgg16_bn_ep120model_SA_best.pth.tar --unlearn nothing --unlearn_epochs 1 --unlearn_lr 0.1 --data ./data --dataset cifar100 --seed 1 --arch vgg16_bn --epochs 120 --num_indexes_to_replace 450
--u mlflow_forget.py --save_dir ./results/cifar100 --mask ./results/cifar100/2resnet18_ep120model_SA_best.pth.tar --unlearn nothing --unlearn_epochs 1 --unlearn_lr 0.1 --data ./data --dataset cifar100 --seed 2 --arch resnet18 --epochs 120 --num_indexes_to_replace 450
--u mlflow_forget.py --save_dir ./results/cifar100 --mask ./results/cifar100/2vgg16_bn_ep120model_SA_best.pth.tar --unlearn nothing --unlearn_epochs 1 --unlearn_lr 0.1 --data ./data --dataset cifar100 --seed 2 --arch vgg16_bn --epochs 120 --num_indexes_to_replace 450
