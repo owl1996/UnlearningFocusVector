@@ -11,6 +11,11 @@ baseline_train_epochs = {
     "imagenet100": 90
 }
 
+nums_index_to_replace = {
+    "cifar10": 4500,
+    "cifar100": 450
+}
+
 base_script = "-u mlflow_forget.py"
 
 dataset = ["cifar100"]
@@ -32,6 +37,7 @@ commands = [base_script
             + " --seed " + _seed
             + " --arch " + _arch
             + " --epochs " + str(baseline_train_epochs[_dataset])
+            + " --num_indexes_to_replace " + str(nums_index_to_replace[_dataset])
             for (_dataset, _unlearn, _unlearn_epochs, _seed, _arch) in itertools.product(dataset, unlearn, unlearn_epochs, seeds, archs) 
 ]
 
@@ -72,6 +78,7 @@ ideal_commands = ["-u mlflow_forget.py"
             + " --seed " + _seed
             + " --arch " + _arch
             + " --epochs " + str(baseline_train_epochs[_dataset])
+            + " --num_indexes_to_replace " + str(nums_index_to_replace[_dataset])
             for (_arch, _dataset, _seed) in itertools.product(archs, dataset, seeds)
             if "ideal" + "_uep" + str(baseline_train_epochs[_dataset]) + "_s" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset]) + "checkpoint.pth.tar" not in os.listdir("./results/" + _dataset)]
 
@@ -87,6 +94,7 @@ nothing_commands = [base_script
             + " --seed " + _seed
             + " --arch " + _arch
             + " --epochs " + str(baseline_train_epochs[_dataset])
+            + " --num_indexes_to_replace " + str(nums_index_to_replace[_dataset])
             for (_dataset, _seed, _arch) in itertools.product(dataset, seeds, archs)
 ]
 
@@ -101,6 +109,7 @@ ideal_nothing_commands =  [base_script
             + " --seed " + _seed
             + " --arch " + _arch
             + " --epochs " + str(baseline_train_epochs[_dataset])
+            + " --num_indexes_to_replace " + str(nums_index_to_replace[_dataset])
             for (_dataset, _seed, _arch) in itertools.product(dataset, seeds, archs) 
 ]
 
