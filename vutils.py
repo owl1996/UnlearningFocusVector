@@ -100,29 +100,60 @@ def unlearn_step(model, softmax, forget_input, retain_input, optimizer, device, 
 
 from torch.func import vmap, grad, functional_call  # Nouvelle API PyTorch 2.x
 
+# def get_grad_mean_var(model, criterion, x, y):
+#     # Fonction qui retourne la loss pour un seul échantillon
+#     def compute_loss(params, buffers, x_sample, y_sample):
+#         output = functional_call(model, params, (x_sample.unsqueeze(0),))  # Passage avant avec params donnés
+#         return criterion(output, y_sample.unsqueeze(0))  # Perte
 
-def get_grad_mean_var(model, criterion, x, y):
+#     # Obtenir les paramètres du modèle sous forme de dictionnaire
+#     params = {name: param for name, param in model.named_parameters()}
+#     buffers = {name: buffer for name, buffer in model.named_buffers()}  # Pour les modules comme BatchNorm
+
+#     # Calcul du gradient de la loss par rapport aux paramètres
+#     compute_grad = grad(compute_loss)
+
+#     # Vectoriser pour tout le batch
+#     batched_grads = vmap(compute_grad, (None, None, 0, 0))(params, buffers, x, y)
+
+#     # Calcul de la variance des gradients
+#     gradient_variance = {idx: torch.var(batched_grads[name], dim=0)
+#                          for idx, name in enumerate(batched_grads.keys())}
+
+#     # Calcul de la moyenne des gradients
+#     gradient_mean = {idx: torch.mean(batched_grads[name], dim=0)
+#                          for idx, name in enumerate(batched_grads.keys())}
+
+#     return gradient_mean, gradient_variance
+
+def get_grad_mean_std(model, criterion, x, y):
+    # Sauvegarde du mode actuel du modèle
+    training_mode = model.training
+    model.eval()  # Désactiver track_running_stats pour BatchNorm
+
     # Fonction qui retourne la loss pour un seul échantillon
     def compute_loss(params, buffers, x_sample, y_sample):
-        output = functional_call(model, params, (x_sample.unsqueeze(0),))  # Passage avant avec params donnés
+        output = functional_call(model, (params, buffers), (x_sample.unsqueeze(0),))  # Passage avant
         return criterion(output, y_sample.unsqueeze(0))  # Perte
 
-    # Obtenir les paramètres du modèle sous forme de dictionnaire
+    # Obtenir les paramètres et buffers du modèle
     params = {name: param for name, param in model.named_parameters()}
-    buffers = {name: buffer for name, buffer in model.named_buffers()}  # Pour les modules comme BatchNorm
+    buffers = {name: buffer for name, buffer in model.named_buffers()}  # Inclut BatchNorm
 
     # Calcul du gradient de la loss par rapport aux paramètres
     compute_grad = grad(compute_loss)
 
     # Vectoriser pour tout le batch
     batched_grads = vmap(compute_grad, (None, None, 0, 0))(params, buffers, x, y)
-
+    
     # Calcul de la variance des gradients
-    gradient_variance = {name: torch.var(batched_grads[name], dim=0)
-                         for name in batched_grads.keys()}
+    gradient_std = {idx: torch.std(batched_grads[name], dim=0, unbiased = True) for idx, name in enumerate(batched_grads.keys())}
 
     # Calcul de la moyenne des gradients
-    gradient_mean = {name: torch.mean(batched_grads[name], dim=0)
-                         for name in batched_grads.keys()}
+    gradient_mean = {idx: torch.mean(batched_grads[name], dim=0) for idx, name in enumerate(batched_grads.keys())}
 
-    return gradient_mean, gradient_variance
+    # Restaurer le mode d'entraînement du modèle
+    if training_mode:
+        model.train()
+
+    return gradient_mean, gradient_std

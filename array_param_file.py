@@ -18,8 +18,8 @@ nums_index_to_replace = {
 
 base_script = "-u mlflow_forget.py"
 
-dataset = ["cifar100"]
-unlearn = ["NGPlus", "mix_NGPlus", "SRL", "mix_SRL", "SalUn", "FT"]
+dataset = ["cifar10"]
+unlearn = ["NGPlus", "mix_NGPlus", "SRL", "mix_SRL", "SalUn", "FT", "pSalUn"]
 unlearn_epochs = ["1", "5", "10"]
 beta = ["0.9", "0.95"]
 quantile = ["0.3", "0.5"]

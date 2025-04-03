@@ -3,12 +3,13 @@ import time
 import torch
 import utils
 from .impl import iterative_unlearn
+import vutils
 
 sys.path.append(".")
 from imagenet import get_x_y_from_data_dict
 
 @iterative_unlearn
-def SalUn(data_loaders, model, criterion, optimizer, epoch, args):
+def pSalUn(data_loaders, model, criterion, optimizer, epoch, args, p = 0.8):
     beta = args.beta
 
     forget_loader = data_loaders["forget"]
@@ -40,16 +41,14 @@ def SalUn(data_loaders, model, criterion, optimizer, epoch, args):
                     epoch, i + 1, optimizer, one_epoch_step=len(forget_loader), args=args
                 )
             
-             # compute output for masking salUn
-            output_clean = model(image)
+             # compute grads and masking
+            gradient_mean_forget, gradient_std_forget = vutils.get_grad_mean_std(model, criterion, image, target)
 
-            loss = -criterion(output_clean, target)
-            optimizer.zero_grad()
-            loss.backward()
-
+            # compute the mask
             for idx_param, param in enumerate(model.parameters()):
-                # salUn
-                mask = (torch.abs(param.grad) >= torch.quantile(torch.abs(param.grad), args.quantile, interpolation='midpoint'))
+                # p - salUn
+                normalized_grad = gradient_mean_forget[idx_param] / (gradient_std_forget[idx_param] - 10 ** -6)
+                mask = torch.distributions.Normal(0, 1).cdf(normalized_grad) > p
                 # imbriqué
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad
@@ -85,7 +84,6 @@ def SalUn(data_loaders, model, criterion, optimizer, epoch, args):
             loss.backward()
 
             for idx_param, param in enumerate(model.parameters()):
-                
                 param.grad = mask_grads[idx_param] * (beta * param.grad + (1 - beta) * grads[idx_param])
             optimizer.step()
             
@@ -118,15 +116,12 @@ def SalUn(data_loaders, model, criterion, optimizer, epoch, args):
             target = target.to(device)
 
             # compute output for masking salUn
-            output_clean = model(image)
-
-            loss = -criterion(output_clean, target)
-            optimizer.zero_grad()
-            loss.backward()
+            gradient_mean_forget, gradient_std_forget = vutils.get_grad_mean_std(model, criterion, image, target)
 
             for idx_param, param in enumerate(model.parameters()):
-                # salUn
-                mask = (torch.abs(param.grad) >= torch.quantile(torch.abs(param.grad), args.quantile, interpolation='midpoint'))
+                # p - salUn
+                normalized_grad = gradient_mean_forget[idx_param] / (gradient_std_forget[idx_param] - 10 ** -6)
+                mask = torch.distributions.Normal(0, 1).cdf(normalized_grad) > p
                 # imbriqué
                 mask_grad = mask * mask_grads[idx_param]
                 mask_grads[idx_param] = mask_grad

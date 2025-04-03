@@ -17,6 +17,7 @@ from .mix_NGPlus import mix_NGPlus
 from .mix_SRL import mix_SRL
 from .ideal import ideal
 from .nothing import nothing
+from .pSalUn import pSalUn
 
 def raw(data_loaders, model, criterion, args):
     pass
@@ -70,5 +71,7 @@ def get_unlearn_method(name):
         return ideal
     elif name == "nothing":
         return nothing
+    elif name == "pSalUn":
+        return pSalUn
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")
