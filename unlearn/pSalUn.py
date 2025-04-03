@@ -42,7 +42,7 @@ def pSalUn(data_loaders, model, criterion, optimizer, epoch, args, p = 0.8):
                 )
             
              # compute grads and masking
-            gradient_mean_forget, gradient_std_forget = vutils.get_grad_mean_std(model, criterion, image, target)
+            gradient_mean_forget, gradient_std_forget = vutils.get_grad_mean_std(model, criterion, image, target, mini_batch = 32)
 
             # compute the mask
             for idx_param, param in enumerate(model.parameters()):
@@ -116,7 +116,7 @@ def pSalUn(data_loaders, model, criterion, optimizer, epoch, args, p = 0.8):
             target = target.to(device)
 
             # compute output for masking salUn
-            gradient_mean_forget, gradient_std_forget = vutils.get_grad_mean_std(model, criterion, image, target)
+            gradient_mean_forget, gradient_std_forget = vutils.get_grad_mean_std(model, criterion, image, target, mini_batch = 32)
 
             for idx_param, param in enumerate(model.parameters()):
                 # p - salUn

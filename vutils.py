@@ -98,61 +98,49 @@ def unlearn_step(model, softmax, forget_input, retain_input, optimizer, device, 
     optimizer.step()
     return max_perc_param, masks
 
-from torch.func import vmap, grad, functional_call  # Nouvelle API PyTorch 2.x
+import torch
+from torch.func import vmap, grad, functional_call
 
-# def get_grad_mean_var(model, criterion, x, y):
-#     # Fonction qui retourne la loss pour un seul échantillon
-#     def compute_loss(params, buffers, x_sample, y_sample):
-#         output = functional_call(model, params, (x_sample.unsqueeze(0),))  # Passage avant avec params donnés
-#         return criterion(output, y_sample.unsqueeze(0))  # Perte
-
-#     # Obtenir les paramètres du modèle sous forme de dictionnaire
-#     params = {name: param for name, param in model.named_parameters()}
-#     buffers = {name: buffer for name, buffer in model.named_buffers()}  # Pour les modules comme BatchNorm
-
-#     # Calcul du gradient de la loss par rapport aux paramètres
-#     compute_grad = grad(compute_loss)
-
-#     # Vectoriser pour tout le batch
-#     batched_grads = vmap(compute_grad, (None, None, 0, 0))(params, buffers, x, y)
-
-#     # Calcul de la variance des gradients
-#     gradient_variance = {idx: torch.var(batched_grads[name], dim=0)
-#                          for idx, name in enumerate(batched_grads.keys())}
-
-#     # Calcul de la moyenne des gradients
-#     gradient_mean = {idx: torch.mean(batched_grads[name], dim=0)
-#                          for idx, name in enumerate(batched_grads.keys())}
-
-#     return gradient_mean, gradient_variance
-
-def get_grad_mean_std(model, criterion, x, y):
-    # Sauvegarde du mode actuel du modèle
+def get_grad_mean_std(model, criterion, x, y, mini_batch=16):
     training_mode = model.training
-    model.eval()  # Désactiver track_running_stats pour BatchNorm
+    model.eval()
 
-    # Fonction qui retourne la loss pour un seul échantillon
+    params = dict(model.named_parameters())
+    buffers = dict(model.named_buffers())
+
     def compute_loss(params, buffers, x_sample, y_sample):
-        output = functional_call(model, (params, buffers), (x_sample.unsqueeze(0),))  # Passage avant
-        return criterion(output, y_sample.unsqueeze(0))  # Perte
+        output = functional_call(model, (params, buffers), (x_sample.unsqueeze(0),))
+        return criterion(output, y_sample.unsqueeze(0))
 
-    # Obtenir les paramètres et buffers du modèle
-    params = {name: param for name, param in model.named_parameters()}
-    buffers = {name: buffer for name, buffer in model.named_buffers()}  # Inclut BatchNorm
-
-    # Calcul du gradient de la loss par rapport aux paramètres
     compute_grad = grad(compute_loss)
+    batch_size = x.shape[0]
+    num_splits = batch_size // mini_batch
 
-    # Vectoriser pour tout le batch
-    batched_grads = vmap(compute_grad, (None, None, 0, 0))(params, buffers, x, y)
-    
-    # Calcul de la variance des gradients
-    gradient_std = {idx: torch.std(batched_grads[name], dim=0, unbiased = True) for idx, name in enumerate(batched_grads.keys())}
+    mini_batch_grads = {name: [] for name in params}
 
-    # Calcul de la moyenne des gradients
-    gradient_mean = {idx: torch.mean(batched_grads[name], dim=0) for idx, name in enumerate(batched_grads.keys())}
+    for i in range(num_splits):
+        x_mini = x[i * mini_batch:(i + 1) * mini_batch]
+        y_mini = y[i * mini_batch:(i + 1) * mini_batch]
 
-    # Restaurer le mode d'entraînement du modèle
+        batched_grads = vmap(compute_grad, (None, None, 0, 0))(params, buffers, x_mini, y_mini)
+
+        for name, grad_values in batched_grads.items():
+            if grad_values.numel() > 0:
+                mini_batch_grads[name].append(grad_values.mean(dim=0))
+            else:
+                print(f"Warning: Gradients vides pour {name} dans le mini-batch {i}")
+
+    gradient_mean = {}
+    gradient_std = {}
+
+    for idx, (name, grads) in enumerate(mini_batch_grads.items()):
+        if grads:
+            stacked_grads = torch.stack(grads, dim=0)
+            gradient_mean[idx] = stacked_grads.mean(dim=0)
+            gradient_std[idx] = stacked_grads.std(dim=0, unbiased=True)
+        else:
+            raise ValueError(f"Les gradients pour le paramètre {name} sont vides")
+
     if training_mode:
         model.train()
 
