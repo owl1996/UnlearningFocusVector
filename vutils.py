@@ -101,7 +101,7 @@ def unlearn_step(model, softmax, forget_input, retain_input, optimizer, device, 
 import torch
 from torch.func import vmap, grad, functional_call
 
-def get_grad_mean_std(model, criterion, x, y, mini_batch=16):
+def get_grad_mean_std(model, criterion, x, y, mini_batch=64):
     training_mode = model.training
     model.eval()
 

@@ -1,0 +1,134 @@
+import sys
+import time
+import torch
+import utils
+import vutils
+from .impl import iterative_unlearn
+
+sys.path.append(".")
+from imagenet import get_x_y_from_data_dict
+
+normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
+
+@iterative_unlearn
+def VarGrad(data_loaders, model, criterion, optimizer, epoch, args, p = 0.6):
+    """
+    VarGrad unlearning method.
+    
+    We compute the different gradients (according to NegGradPlus) of the losses with respect to the model parameters.
+    We estimate the variance of the gradients of the parameters.
+    We put a probabilistic threshold so that we mask the parameters that are unsure to be updated.
+
+    """
+
+    forget_loader = data_loaders["forget"]
+    retain_loader = data_loaders["retain"]
+    retain_loader_iter = enumerate(retain_loader)
+
+    losses = utils.AverageMeter()
+    top1 = utils.AverageMeter()
+
+    if torch.cuda.is_available():
+        torch.cuda.set_device(int(args.gpu))
+        device = torch.device(f"cuda:{int(args.gpu)}")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+
+    mask_grads = [torch.ones_like(param) for param in model.parameters()]
+    
+    optimizer_forget = torch.optim.Adam(params = model.parameters())
+    optimizer_retain = torch.optim.Adam(params = model.parameters())
+
+    optimizer = torch.optim.Adam(lr = args.unlearn_lr, params = model.parameters())
+
+    start = time.time()
+    model.train()
+    for i, (image, target) in enumerate(forget_loader):
+        # NegGrad : Montée de Gradient sur le forget
+        image = image.to(device)
+        target = target.to(device)
+
+        if epoch < args.warmup:
+                utils.warmup_lr(
+                    epoch, i + 1, optimizer, one_epoch_step=len(forget_loader), args=args
+                )
+
+        model.zero_grad()
+        original_params = [param.detach().clone() for param in model.parameters()]
+
+        loss = - criterion(model(image), target)
+        loss.backward()
+
+        with torch.no_grad():
+            optimizer_forget.step()
+            for param, orig in zip(model.parameters(), original_params):
+                param.copy_(orig)
+
+        # Plus : Descente sur le retain
+        _, data = next(retain_loader_iter)
+        image, target = data[0].to(device), data[1].to(device)
+
+        model.zero_grad()
+        output_clean = model(image)
+        loss = criterion(output_clean, target)
+        loss.backward()
+
+        with torch.no_grad():
+            optimizer_retain.step()
+            for param, orig in zip(model.parameters(), original_params):
+                param.copy_(orig)
+        
+        del original_params
+
+        # Compute the mask
+        for idx_param, param in enumerate(model.parameters()):
+
+            # saved momentums in optimizers
+            m_forget, v_forget = optimizer_forget.state[param]["exp_avg"], optimizer_forget.state[param]["exp_avg_sq"]
+            _, v_retain = optimizer_retain.state[param]["exp_avg"], optimizer_retain.state[param]["exp_avg_sq"]
+
+            signal_noise_forget = m_forget / (v_forget + 1e-8).sqrt()
+            signal_noise_retain = param.grad / (v_retain + 1e-8).sqrt()
+
+            cdf_forget = normal_dist.cdf(signal_noise_forget)
+            cdf_retain = normal_dist.cdf(signal_noise_retain)
+
+            # quantiles mask
+            vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
+            mask = vmask >= args.quantile
+
+            # imbriqué
+            mask_grad = mask * mask_grads[idx_param]
+            mask_grads[idx_param] = mask_grad
+
+            # update grad
+            param.grad = mask_grad * (args.beta * signal_noise_retain + (1 - args.beta) * signal_noise_forget)
+
+            # print("Ratio of masked parameters : ", mask_grad.sum() / mask.numel())
+
+        optimizer.step()
+
+        # measure accuracy and record loss
+        output = output_clean.float()
+        loss = loss.float()
+        prec1 = utils.accuracy(output.data, target)[0]
+        losses.update(loss.item(), image.size(0))
+        top1.update(prec1.item(), image.size(0))
+
+        if (i + 1) % args.print_freq == 0:
+            end = time.time()
+            print(
+                "Epoch: [{0}][{1}/{2}]\t"
+                "Loss {loss.val:.4f} ({loss.avg:.4f})\t"
+                "Accuracy {top1.val:.3f} ({top1.avg:.3f})\t"
+                "Time {3:.2f}".format(
+                    epoch, i, len(forget_loader), end - start, loss=losses, top1=top1
+                )
+            )
+            start = time.time()
+
+    print("train_accuracy {top1.avg:.3f}".format(top1=top1))
+
+    return top1.avg

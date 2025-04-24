@@ -18,6 +18,7 @@ from .mix_SRL import mix_SRL
 from .ideal import ideal
 from .nothing import nothing
 from .pSalUn import pSalUn
+from .vargrad import VarGrad
 
 def raw(data_loaders, model, criterion, args):
     pass
@@ -73,5 +74,7 @@ def get_unlearn_method(name):
         return nothing
     elif name == "pSalUn":
         return pSalUn
+    elif name == "VarGrad":
+        return VarGrad
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")
