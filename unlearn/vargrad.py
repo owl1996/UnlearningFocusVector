@@ -20,6 +20,10 @@ def VarGrad(data_loaders, model, criterion, optimizer, epoch, args, p = 0.6):
     We put a probabilistic threshold so that we mask the parameters that are unsure to be updated.
 
     """
+    # TODO : Compute the moments without calling the optimizers
+    # betas = (0.9, 0.999)
+    # eps = 1e-8
+    # moments = ([torch.zeros_like(param) for param in model.parameters()], [torch.zeros_like(param) for param in model.parameters()])
 
     forget_loader = data_loaders["forget"]
     retain_loader = data_loaders["retain"]
@@ -60,6 +64,8 @@ def VarGrad(data_loaders, model, criterion, optimizer, epoch, args, p = 0.6):
 
         loss = - criterion(model(image), target)
         loss.backward()
+
+        grad_forget = [param.grad for param in model.parameters()]
 
         with torch.no_grad():
             optimizer_forget.step()
@@ -104,7 +110,7 @@ def VarGrad(data_loaders, model, criterion, optimizer, epoch, args, p = 0.6):
             mask_grads[idx_param] = mask_grad
 
             # update grad
-            param.grad = mask_grad * (args.beta * signal_noise_retain + (1 - args.beta) * signal_noise_forget)
+            param.grad = mask_grad * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
 
             # print("Ratio of masked parameters : ", mask_grad.sum() / mask.numel())
 

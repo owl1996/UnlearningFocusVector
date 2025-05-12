@@ -32,6 +32,7 @@ def main():
     mlflow.start_run()
 
     # Log input arguments
+    mlflow.log_param("seed", args.seed)
     mlflow.log_param("save_dir", args.save_dir)
     mlflow.log_param("model", args.mask)
     mlflow.log_param("unlearn", args.unlearn)
