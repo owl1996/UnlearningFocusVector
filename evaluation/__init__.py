@@ -9,3 +9,5 @@ sys.path.append(config["sys_path"])
 
 from .MIA import MIA
 from .SVC_MIA import SVC_MIA
+from .SVC_MIA import SVC_classifiers
+from .SVC_MIA import SVC_predict

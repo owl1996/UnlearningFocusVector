@@ -61,6 +61,8 @@ def collect_prob(data_loader, model):
     return torch.cat(prob), torch.cat(targets)
 
 
+
+
 def SVC_fit_predict(shadow_train, shadow_test, target_train, target_test):
     n_shadow_train = shadow_train.shape[0]
     n_shadow_test = shadow_test.shape[0]
@@ -91,6 +93,7 @@ def SVC_fit_predict(shadow_train, shadow_test, target_train, target_test):
         accs.append(acc_test)
 
     return np.mean(accs)
+
 
 
 def SVC_MIA(shadow_train, target_train, target_test, shadow_test, model):
@@ -158,3 +161,96 @@ def SVC_MIA(shadow_train, target_train, target_test, shadow_test, model):
     }
     print(m)
     return m
+
+def SVC_classifier(shadow_train, shadow_test):
+    "Return a classifier model"
+    n_shadow_train = shadow_train.shape[0]
+    n_shadow_test = shadow_test.shape[0]
+
+    X_shadow = (
+        torch.cat([shadow_train, shadow_test])
+        .cpu()
+        .numpy()
+        .reshape(n_shadow_train + n_shadow_test, -1)
+    )
+    Y_shadow = np.concatenate([np.ones(n_shadow_train), np.zeros(n_shadow_test)])
+    
+    clf = SVC(C=3, gamma="auto", kernel="rbf")
+    clf.fit(X_shadow, Y_shadow)
+    return clf
+
+def SVC_classifiers(shadow_train, shadow_test, model):
+    """Return a dict of classifiers model"""
+    shadow_train_prob, shadow_train_labels = collect_prob(shadow_train, model)
+    shadow_test_prob, shadow_test_labels = collect_prob(shadow_test, model)
+
+    shadow_train_corr = (
+        torch.argmax(shadow_train_prob, axis=1) == shadow_train_labels
+    ).int()
+    shadow_test_corr = (
+        torch.argmax(shadow_test_prob, axis=1) == shadow_test_labels
+    ).int()
+
+    shadow_train_conf = torch.gather(shadow_train_prob, 1, shadow_train_labels[:, None])
+    shadow_test_conf = torch.gather(shadow_test_prob, 1, shadow_test_labels[:, None])
+
+    shadow_train_entr = entropy(shadow_train_prob)
+    shadow_test_entr = entropy(shadow_test_prob)
+
+    shadow_train_m_entr = m_entropy(shadow_train_prob, shadow_train_labels)
+    shadow_test_m_entr = m_entropy(shadow_test_prob, shadow_test_labels)
+
+    clfs = {
+        "correctness": SVC_classifier(
+            shadow_train_corr, shadow_test_corr
+        ),
+        "confidence": SVC_classifier(
+            shadow_train_conf, shadow_test_conf
+        ),
+        "entropy": SVC_classifier(
+            shadow_train_entr, shadow_test_entr
+        ),
+        "m_entropy": SVC_classifier(
+            shadow_train_m_entr, shadow_test_m_entr
+        ),
+        "prob": SVC_classifier(
+            shadow_train_prob, shadow_test_prob
+        )
+    }
+
+    return clfs
+
+def SVC_predict(clfs, target_loader, model):
+    target_prob, target_labels = collect_prob(target_loader, model)
+    target_corr = (
+        torch.argmax(target_prob, axis=1) == target_labels
+    ).int()
+    target_conf = torch.gather(target_prob, 1, target_labels[:, None])
+    target_entr = entropy(target_prob)
+    target_m_entr = m_entropy(target_prob, target_labels)
+
+    results = {}
+    for metric, clf in clfs.items():
+        if metric == "prob":
+            X_target = target_prob.cpu().numpy().reshape(target_prob.shape[0], -1)
+            pred = clf.predict(X_target)
+            results[metric] = pred.mean()
+        elif metric == "correctness":
+            X_target = target_corr.cpu().numpy().reshape(target_corr.shape[0], -1)
+            pred = clf.predict(X_target)
+            results[metric] = pred.mean()
+        elif metric == "confidence":
+            X_target = target_conf.cpu().numpy().reshape(target_conf.shape[0], -1)
+            pred = clf.predict(X_target)
+            results[metric] = pred.mean()
+        elif metric == "entropy":
+            X_target = target_entr.cpu().numpy().reshape(target_entr.shape[0], -1)
+            pred = clf.predict(X_target)
+            results[metric] = pred.mean()
+        elif metric == "m_entropy":
+            X_target = target_m_entr.cpu().numpy().reshape(target_m_entr.shape[0], -1)
+            pred = clf.predict(X_target)
+            results[metric] = pred.mean()
+        else:
+            raise ValueError(f"Unknown metric: {metric}")
+    return results

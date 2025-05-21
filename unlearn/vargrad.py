@@ -5,13 +5,17 @@ import utils
 import vutils
 from .impl import iterative_unlearn
 
+import mlflow
+
+from trainer import validate
+
 sys.path.append(".")
 from imagenet import get_x_y_from_data_dict
 
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
 
 @iterative_unlearn
-def VarGrad(data_loaders, model, criterion, optimizer, epoch, args, p = 0.6):
+def VarGrad(data_loaders, model, criterion, optimizer, epoch, args):
     """
     VarGrad unlearning method.
     
@@ -24,6 +28,21 @@ def VarGrad(data_loaders, model, criterion, optimizer, epoch, args, p = 0.6):
     # betas = (0.9, 0.999)
     # eps = 1e-8
     # moments = ([torch.zeros_like(param) for param in model.parameters()], [torch.zeros_like(param) for param in model.parameters()])
+
+    mlflow.start_run()
+    mlflow.log_param("seed", args.seed)
+    mlflow.log_param("save_dir", args.save_dir)
+    mlflow.log_param("model", args.mask)
+    mlflow.log_param("unlearn", args.unlearn)
+    mlflow.log_param("num_indexes_to_replace", args.num_indexes_to_replace)
+    mlflow.log_param("unlearn_epochs", epoch + 1)
+    mlflow.log_param("unlearn_lr", args.unlearn_lr) 
+    mlflow.log_param("beta", args.beta)
+    mlflow.log_param("quantile", args.quantile)
+    mlflow.log_param("num_indexes_to_replace", args.num_indexes_to_replace)
+    mlflow.log_param("class_to_replace", -1)
+    mlflow.log_param("arch", args.arch) 
+    mlflow.log_param("dataset", args.dataset)
 
     forget_loader = data_loaders["forget"]
     retain_loader = data_loaders["retain"]
@@ -123,6 +142,13 @@ def VarGrad(data_loaders, model, criterion, optimizer, epoch, args, p = 0.6):
         losses.update(loss.item(), image.size(0))
         top1.update(prec1.item(), image.size(0))
 
+        for name, loader in data_loaders.items():
+            utils.dataset_convert_to_test(loader.dataset, args)
+            val_acc = validate(loader, model, criterion, args)
+            mlflow.log_metric(name, val_acc)
+
+        mlflow.log_metric("RTE", time.time() - start)
+
         if (i + 1) % args.print_freq == 0:
             end = time.time()
             print(
@@ -134,7 +160,8 @@ def VarGrad(data_loaders, model, criterion, optimizer, epoch, args, p = 0.6):
                 )
             )
             start = time.time()
-
-    print("train_accuracy {top1.avg:.3f}".format(top1=top1))
+    
+    mlflow.end_run()
+    print("retain_accuracy {top1.avg:.3f}".format(top1=top1))
 
     return top1.avg
