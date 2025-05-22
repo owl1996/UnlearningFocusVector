@@ -15,7 +15,7 @@ from imagenet import get_x_y_from_data_dict
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
 
 @iterative_unlearn
-def VarGrad(data_loaders, model, criterion, optimizer, epoch, args):
+def SalGrad(data_loaders, model, criterion, optimizer, epoch, args):
     """
     VarGrad unlearning method.
     
@@ -110,19 +110,7 @@ def VarGrad(data_loaders, model, criterion, optimizer, epoch, args):
         # Compute the mask
         for idx_param, param in enumerate(model.parameters()):
 
-            # saved momentums in optimizers
-            m_forget, v_forget = optimizer_forget.state[param]["exp_avg"], optimizer_forget.state[param]["exp_avg_sq"]
-            _, v_retain = optimizer_retain.state[param]["exp_avg"], optimizer_retain.state[param]["exp_avg_sq"]
-
-            signal_noise_forget = m_forget / (v_forget + 1e-1).sqrt()
-            signal_noise_retain = param.grad / (v_retain + 1e-1).sqrt()
-
-            cdf_forget = normal_dist.cdf(signal_noise_forget)
-            cdf_retain = normal_dist.cdf(signal_noise_retain)
-
-            # quantiles mask
-            vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
-            mask = vmask >= args.quantile
+            mask = (torch.abs(grad_forget[idx_param]) >= torch.quantile(torch.abs(grad_forget[idx_param]), args.quantile))
 
             # imbriqué
             mask_grad = mask * mask_grads[idx_param]

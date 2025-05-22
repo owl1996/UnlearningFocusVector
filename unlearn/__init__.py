@@ -19,6 +19,7 @@ from .ideal import ideal
 from .nothing import nothing
 from .pSalUn import pSalUn
 from .vargrad import VarGrad
+from .salgrad import SalGrad
 
 def raw(data_loaders, model, criterion, args):
     pass
@@ -76,5 +77,7 @@ def get_unlearn_method(name):
         return pSalUn
     elif name == "VarGrad":
         return VarGrad
+    elif name == "SalGrad":
+        return SalGrad
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")

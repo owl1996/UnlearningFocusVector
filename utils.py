@@ -43,13 +43,13 @@ def warmup_lr(epoch, step, optimizer, one_epoch_step, args):
 
 
 def save_checkpoint(
-    state, is_SA_best, save_path, pruning, filename="checkpoint.pth.tar"
+    state, is_SA_best, save_path, strmodel, filename="checkpoint.pth.tar"
 ):
-    filepath = os.path.join(save_path, str(pruning) + filename)
+    filepath = os.path.join(save_path, strmodel + filename)
     torch.save(state, filepath)
     if is_SA_best:
         shutil.copyfile(
-            filepath, os.path.join(save_path, str(pruning) + "model_SA_best.pth.tar")
+            filepath, os.path.join(save_path, strmodel + "model.pth.tar")
         )
 
 

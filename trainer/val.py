@@ -3,8 +3,7 @@ import torch
 import utils
 from imagenet import get_x_y_from_data_dict
 
-
-def validate(val_loader, model, criterion, args):
+def validate(val_loader, model, criterion, args, verbose=False):
     """
     Run evaluation
     """
@@ -43,8 +42,8 @@ def validate(val_loader, model, criterion, args):
                         i, len(val_loader), loss=losses, top1=top1
                     )
                 )
-
-        print("valid_accuracy {top1.avg:.3f}".format(top1=top1))
+        if verbose:
+            print("valid_accuracy {top1.avg:.3f}".format(top1=top1))    
     else:
         for i, (image, target) in enumerate(val_loader):
             image = image.to(device)
@@ -63,7 +62,7 @@ def validate(val_loader, model, criterion, args):
             losses.update(loss.item(), image.size(0))
             top1.update(prec1.item(), image.size(0))
 
-            if i % args.print_freq == 0:
+            if i % args.print_freq == 0 and verbose:
                 print(
                     "Test: [{0}/{1}]\t"
                     "Loss {loss.val:.4f} ({loss.avg:.4f})\t"
@@ -71,7 +70,7 @@ def validate(val_loader, model, criterion, args):
                         i, len(val_loader), loss=losses, top1=top1
                     )
                 )
-
-        print("valid_accuracy {top1.avg:.3f}".format(top1=top1))
+        if verbose:
+            print("valid_accuracy {top1.avg:.3f}".format(top1=top1))
 
     return top1.avg

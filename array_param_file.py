@@ -3,8 +3,8 @@ import os
 
 # Liste de tes commandes sous forme de strings
 baseline_train_epochs = {
-    "cifar10": 100,
-    "cifar100": 120,
+    "cifar10": 20,
+    "cifar100": 20,
     "tiny-imagenet": 1,
     "svhn": 200,
     "imagenet": 90,
@@ -12,127 +12,47 @@ baseline_train_epochs = {
 }
 
 nums_index_to_replace = {
-    "cifar10": 4500,
-    "cifar100": 450
+    "cifar10": {-1 : [2250, 4500, 22500],
+                0 : [450, 2250, 4500]
+                },
+    "cifar100": {-1 : [2250, 4500, 22500],
+                 0 : [45, 225, 450]
+                }
 }
 
 base_script = "-u mlflow_forget.py"
 
 dataset = ["cifar10"]
-unlearn = ["NGPlus", "mix_NGPlus", "SRL", "mix_SRL", "SalUn", "FT", "pSalUn"]
-unlearn_epochs = ["1", "5", "10"]
-beta = ["0.9", "0.95"]
-quantile = ["0.3", "0.5"]
+# unlearn = ["NGPlus", "mix_NGPlus", "SRL", "mix_SRL", "SalUn", "FT", "pSalUn"]
+unlearn = ["NGPlus"]
+unlearn_epochs = ["10"]
 archs = ["resnet18", "vgg16_bn"]
 seeds = ["1", "2", "3"]
+quantiles = ["0.3", "0,4", "0.5", "0,6", "0.7"]
+class_to_replace = [-1, 0]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
-            + " --mask ./results/" + _dataset + "/" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset]) + "model_SA_best.pth.tar"
+            + " --mask ./results/" + _dataset + "/" + str(_class_to_replace) + "_" + _dataset + "_"  + _arch + "_" + _seed + "model.pth.tar" 
             + " --unlearn " + _unlearn
             + " --unlearn_epochs " + _unlearn_epochs
-            + " --unlearn_lr 0.1"
+            + " --unlearn_lr 0.001"
             + " --data ./data"
             + " --dataset " + _dataset
             + " --seed " + _seed
             + " --arch " + _arch
             + " --epochs " + str(baseline_train_epochs[_dataset])
-            + " --num_indexes_to_replace " + str(nums_index_to_replace[_dataset])
-            for (_dataset, _unlearn, _unlearn_epochs, _seed, _arch) in itertools.product(dataset, unlearn, unlearn_epochs, seeds, archs) 
+            + " --num_indexes_to_replace " + str(_nums_index_to_replace)
+            + " --class_to_replace " + str(_class_to_replace)
+            + " --beta " + "0.95"
+            + " --quantile " + _quantile
+            for (_dataset, _unlearn, _unlearn_epochs, _seed, _arch, _quantile, _class_to_replace) in itertools.product(dataset, unlearn, unlearn_epochs, seeds, archs, quantiles, class_to_replace)
+            for _nums_index_to_replace in nums_index_to_replace[_dataset][_class_to_replace]
 ]
 
-new_commands = []
-for command in commands:
-    if ("SRL" in command) or ("SalUn" in command) or ("NGPlus" in command):
-        commands.remove(command)
-        for _beta in beta:
-            new_command = command + " --beta " + _beta
-            if ("SalUn" in command) or ("mix" in command):
-                for _quantile in quantile:
-                    new_command_ = new_command + " --quantile " + _quantile
-                    new_commands.append(new_command_)
-            else:
-                new_commands.append(new_command)
-    else:
-        new_commands.append(command)
-    
-# print(new_commands)
-
-base_commands = ["-u main_baseline.py"
-            + " --save_dir ./results/" + _dataset
-            + " --arch " + _arch
-            + " --data ./data"
-            + " --dataset " + _dataset
-            + " --seed " + _seed
-            + " --epochs " + str(baseline_train_epochs[_dataset])
-            for (_arch, _dataset, _seed) in itertools.product(archs, dataset, seeds)]
-
-ideal_commands = ["-u mlflow_forget.py"
-            + " --save_dir ./results/" + _dataset
-            + " --mask ./results/" + _dataset + "/" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset]) + "model_SA_best.pth.tar"
-            + " --unlearn ideal"
-            + " --unlearn_epochs " + str(baseline_train_epochs[_dataset])
-            + " --unlearn_lr 0.1"
-            + " --data ./data"
-            + " --dataset " + _dataset
-            + " --seed " + _seed
-            + " --arch " + _arch
-            + " --epochs " + str(baseline_train_epochs[_dataset])
-            + " --num_indexes_to_replace " + str(nums_index_to_replace[_dataset])
-            for (_arch, _dataset, _seed) in itertools.product(archs, dataset, seeds)
-            if "ideal" + "_uep" + str(baseline_train_epochs[_dataset]) + "_s" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset]) + "checkpoint.pth.tar" not in os.listdir("./results/" + _dataset)]
-
-
-nothing_commands = [base_script
-            + " --save_dir ./results/" + _dataset
-            + " --mask ./results/" + _dataset + "/" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset]) + "model_SA_best.pth.tar"
-            + " --unlearn nothing"
-            + " --unlearn_epochs 1"
-            + " --unlearn_lr 0.1"
-            + " --data ./data"
-            + " --dataset " + _dataset
-            + " --seed " + _seed
-            + " --arch " + _arch
-            + " --epochs " + str(baseline_train_epochs[_dataset])
-            + " --num_indexes_to_replace " + str(nums_index_to_replace[_dataset])
-            for (_dataset, _seed, _arch) in itertools.product(dataset, seeds, archs)
-]
-
-ideal_nothing_commands =  [base_script
-            + " --save_dir ./results/" + _dataset
-            + " --mask ./results/" + _dataset + "/ideal" + "_uep" + str(baseline_train_epochs[_dataset]) + "_s" + _seed + _arch + "_ep" + str(baseline_train_epochs[_dataset])
-            + " --unlearn nothing"
-            + " --unlearn_epochs 1"
-            + " --unlearn_lr 0.1"
-            + " --data ./data"
-            + " --dataset " + _dataset
-            + " --seed " + _seed
-            + " --arch " + _arch
-            + " --epochs " + str(baseline_train_epochs[_dataset])
-            + " --num_indexes_to_replace " + str(nums_index_to_replace[_dataset])
-            for (_dataset, _seed, _arch) in itertools.product(dataset, seeds, archs) 
-]
-
-print(nothing_commands + ideal_nothing_commands)
-
-file_name = "base_params.txt"
-
-with open(file_name, "w") as f:
-    for commande in base_commands:
-        f.write(commande + "\n")
-
-file_name = "ideal_params.txt"
-
-with open(file_name, "w") as f:
-    for commande in ideal_commands:
-        f.write(commande + "\n")
-
-file_name = "evals.txt"
-with open(file_name, "w") as f:
-    for commande in nothing_commands + ideal_nothing_commands:
-        f.write(commande + "\n")
+print(commands)
 
 file_name = "params.txt"
 with open(file_name, "w") as f:
-    for commande in new_commands:
+    for commande in commands:
         f.write(commande + "\n")

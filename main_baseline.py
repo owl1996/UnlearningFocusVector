@@ -29,14 +29,11 @@ from utils import NormalizeByChannelMeanStd
 
 best_sa = 0
 
-
 def main():
     global args, best_sa
     args = arg_parser.parse_args()
-    print(args)
-
-    model_tag = str(args.seed) + str(args.arch) + "_ep" + str(args.epochs)
-    if model_tag + "model_SA_best.pth.tar" in os.listdir(args.save_dir):
+    model_tag = str(args.class_to_replace) + "_" + str(args.dataset) + "_" + str(args.arch) + "_" + str(args.seed)
+    if model_tag + "model.pth.tar" in os.listdir(args.save_dir):
         print(f"The {model_tag} has already been trained, skip")
         return
 
@@ -140,9 +137,9 @@ def main():
                 "scheduler": scheduler.state_dict(),
                 "init_weight": initalization,
             },
-            is_SA_best=is_best_sa,
-            pruning = str(args.seed) + str(args.arch) + "_ep" + str(args.epochs),
-            save_path=args.save_dir,
+            is_SA_best = is_best_sa,
+            strmodel = str(args.class_to_replace) + "_" + str(args.dataset) + "_" + str(args.arch) + "_" + str(args.seed),
+            save_path = args.save_dir,
         )
 
         # plot training curve
