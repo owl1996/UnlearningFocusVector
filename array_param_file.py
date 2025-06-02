@@ -13,7 +13,7 @@ baseline_train_epochs = {
 
 nums_index_to_replace = {
     "cifar10": {-1 : [2250, 4500, 22500],
-                0 : [450, 2250, 3500]
+                0 : [450, 1900, 3500]
                 },
     "cifar100": {-1 : [2250, 4500, 22500],
                  0 : [45, 225, 350]
@@ -27,7 +27,7 @@ dataset = ["cifar10"]
 unlearn = ["NGPlus", "VarGrad", "SalGrad"]
 unlearn_epochs = ["10"]
 archs = ["resnet18"]
-seeds = ["1", "2", "3", "4", "5"]
+seeds = ["1", "2", "3"]
 quantiles = ["0.3", "0,4", "0.5", "0,6", "0.7"]
 class_to_replace = [-1, 0]
 
@@ -50,10 +50,16 @@ commands = [base_script
 ]
 
 need_quantile = ["VarGrad", "SalGrad"]
+updated_commands = []
+
 for command in commands:
-    for _quantile in quantiles:
-        if any(x in command for x in need_quantile):
-            command = command + " --quantile " + _quantile
+    if any(x in command for x in need_quantile):
+        for _quantile in quantiles:
+            updated_commands.append(command + " --quantile " + _quantile)
+    else:
+        updated_commands.append(command)
+
+commands = updated_commands
 
 print(len(commands))
 
