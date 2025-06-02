@@ -8,6 +8,7 @@ from .impl import iterative_unlearn
 import mlflow
 
 from trainer import validate
+import evaluation
 
 sys.path.append(".")
 from imagenet import get_x_y_from_data_dict
@@ -148,7 +149,21 @@ def SalGrad(data_loaders, model, criterion, optimizer, epoch, args):
         utils.dataset_convert_to_test(loader.dataset, args)
         val_acc = validate(loader, model, criterion, args)
         mlflow.log_metric(name, val_acc)
-        
+    
+    MIA_trainer_loader = torch.utils.data.DataLoader(
+                torch.utils.data.Subset(retain_loader.dataset, list(range(len(data_loaders["test"].dataset)))), batch_size=args.batch_size, shuffle=False
+            )
+    MIA_classifiers = evaluation.SVC_classifiers(MIA_trainer_loader, data_loaders["test"], model)
+    # print(evaluation.SVC_predict(MIA_classifiers, forget_loader, model))
+    eval = evaluation.SVC_predict(MIA_classifiers, forget_loader, model)
+    print(eval)
+    for key, val in eval.items():
+        mlflow.log_metric("MIA_" + key, val)
+
+    result = evaluation.relativeUA(model, data_loaders["test"], args, device)
+    mlflow.log_metric("relativeUA", result["rUA"])
+    mlflow.log_metric("Fid", result["Fid"])
+
     mlflow.end_run()
     print("retain_accuracy {top1.avg:.3f}".format(top1=top1))
 

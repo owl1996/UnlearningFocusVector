@@ -305,8 +305,8 @@ def main():
     # print("Done !")
     # print("Evaluating MIA pre-unlearn ...")
     # print(evaluation.SVC_predict(MIA_classifiers, forget_loader, model_copy))
-    # MIA_classifiers = evaluation.SVC_classifiers(MIA_trainer_loader, test_loader, model)
-    # print(evaluation.SVC_predict(MIA_classifiers, forget_loader, model))
+    MIA_classifiers = evaluation.SVC_classifiers(MIA_trainer_loader, test_loader, model)
+    print(evaluation.SVC_predict(MIA_classifiers, forget_loader, model))
     
 
 if __name__ == "__main__":

@@ -18,13 +18,19 @@ import unlearn
 def main():
     global args
     args = arg_parser.parse_args()
+
     args_u_e = args.unlearn_epochs
     args_u = args.unlearn
+    args_ulr = args.unlearn_lr
+
     args.unlearn = "ideal"
     args.unlearn_epochs = args.epochs
+    args.unlearn_lr = args.lr 
 
     model_tag = "ideal" + "_" + str(args.num_indexes_to_replace) + "_" + str(args.class_to_replace) + "_" + str(args.dataset) + "_" + str(args.arch) + "_" + str(args.seed)
     if model_tag + "checkpoint.pth.tar" in os.listdir(args.save_dir):
+        args.unlearn_epochs = args_u_e
+        args.unlearn = args_u
         print(f"The ideal {model_tag} model has already been trained, skip")
         return
 
@@ -136,9 +142,14 @@ def main():
     unlearn_method(unlearn_data_loaders, model, criterion, args)
 
     unlearn.save_unlearn_checkpoint(model, None, args)
+    torch.save(
+        model.state_dict(),
+        os.path.join(args.save_dir, model_tag + "model.pth.tar"),
+    )
 
     args.unlearn_epochs = args_u_e
     args.unlearn = args_u
+    args.unlearn_lr = args_ulr
 
 if __name__ == "__main__":
     main()
