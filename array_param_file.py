@@ -30,7 +30,7 @@ class_to_replace = [-1, 0]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
-            + " --mask ./results/" + _dataset + "/" + str(_class_to_replace) + "_" + _dataset + "_"  + _arch + "_" + _seed + "model.pth.tar" 
+            + " --mask ./results/" + _dataset + "/" +  _dataset + "_"  + _arch + "_" + _seed + "model.pth.tar" 
             + " --unlearn " + _unlearn
             + " --unlearn_epochs " + _unlearn_epochs
             + " --unlearn_lr 0.0001"
