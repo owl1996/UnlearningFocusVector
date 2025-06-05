@@ -27,7 +27,7 @@ dataset = ["cifar10"]
 # unlearn_epochs = ["10"]
 archs = ["resnet18"]
 seeds = ["1", "2", "3"]
-# quantiles = ["0.3", "0,4", "0.5", "0,6", "0.7"]
+# quantiles = ["0.3", "0,4", "0.5", "0,6"]
 class_to_replace = [-1, 0]
 
 commands = [base_script
