@@ -28,7 +28,7 @@ def main():
     args.unlearn_lr = args.lr 
 
     model_tag = "ideal" + "_" + str(args.num_indexes_to_replace) + "_" + str(args.class_to_replace) + "_" + str(args.dataset) + "_" + str(args.arch) + "_" + str(args.seed)
-    if model_tag + "checkpoint.pth.tar" in os.listdir(args.save_dir):
+    if model_tag + "model.pth.tar" in os.listdir(args.save_dir):
         args.unlearn_epochs = args_u_e
         args.unlearn = args_u
         print(f"The ideal {model_tag} model has already been trained, skip")

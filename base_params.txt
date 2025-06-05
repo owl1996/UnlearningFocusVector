@@ -1,6 +1,21 @@
--u main_baseline.py --save_dir ./results/cifar10 --arch resnet18 --data ./data --dataset cifar10 --seed 1 --epochs 100
--u main_baseline.py --save_dir ./results/cifar10 --arch resnet18 --data ./data --dataset cifar10 --seed 2 --epochs 100
--u main_baseline.py --save_dir ./results/cifar10 --arch resnet18 --data ./data --dataset cifar10 --seed 3 --epochs 100
--u main_baseline.py --save_dir ./results/cifar10 --arch vgg16_bn --data ./data --dataset cifar10 --seed 1 --epochs 100
--u main_baseline.py --save_dir ./results/cifar10 --arch vgg16_bn --data ./data --dataset cifar10 --seed 2 --epochs 100
--u main_baseline.py --save_dir ./results/cifar10 --arch vgg16_bn --data ./data --dataset cifar10 --seed 3 --epochs 100
+-u main_baseline.py --save_dir ./results/cifar10 --mask ./results/cifar10/cifar10_resnet18_1model.pth.tar --data ./data --dataset cifar10 --seed 1 --arch resnet18 --epochs 100
+-u main_baseline.py --save_dir ./results/cifar10 --mask ./results/cifar10/cifar10_resnet18_2model.pth.tar --data ./data --dataset cifar10 --seed 2 --arch resnet18 --epochs 100
+-u main_baseline.py --save_dir ./results/cifar10 --mask ./results/cifar10/cifar10_resnet18_3model.pth.tar --data ./data --dataset cifar10 --seed 3 --arch resnet18 --epochs 100
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_2250_-1_cifar10_resnet18_1model.pth.tar --data ./data --dataset cifar10 --seed 1 --arch resnet18 --epochs 100 --num_indexes_to_replace 2250 --class_to_replace -1
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_4500_-1_cifar10_resnet18_1model.pth.tar --data ./data --dataset cifar10 --seed 1 --arch resnet18 --epochs 100 --num_indexes_to_replace 4500 --class_to_replace -1
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_22500_-1_cifar10_resnet18_1model.pth.tar --data ./data --dataset cifar10 --seed 1 --arch resnet18 --epochs 100 --num_indexes_to_replace 22500 --class_to_replace -1
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_450_0_cifar10_resnet18_1model.pth.tar --data ./data --dataset cifar10 --seed 1 --arch resnet18 --epochs 100 --num_indexes_to_replace 450 --class_to_replace 0
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_1900_0_cifar10_resnet18_1model.pth.tar --data ./data --dataset cifar10 --seed 1 --arch resnet18 --epochs 100 --num_indexes_to_replace 1900 --class_to_replace 0
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_3500_0_cifar10_resnet18_1model.pth.tar --data ./data --dataset cifar10 --seed 1 --arch resnet18 --epochs 100 --num_indexes_to_replace 3500 --class_to_replace 0
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_2250_-1_cifar10_resnet18_2model.pth.tar --data ./data --dataset cifar10 --seed 2 --arch resnet18 --epochs 100 --num_indexes_to_replace 2250 --class_to_replace -1
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_4500_-1_cifar10_resnet18_2model.pth.tar --data ./data --dataset cifar10 --seed 2 --arch resnet18 --epochs 100 --num_indexes_to_replace 4500 --class_to_replace -1
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_22500_-1_cifar10_resnet18_2model.pth.tar --data ./data --dataset cifar10 --seed 2 --arch resnet18 --epochs 100 --num_indexes_to_replace 22500 --class_to_replace -1
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_450_0_cifar10_resnet18_2model.pth.tar --data ./data --dataset cifar10 --seed 2 --arch resnet18 --epochs 100 --num_indexes_to_replace 450 --class_to_replace 0
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_1900_0_cifar10_resnet18_2model.pth.tar --data ./data --dataset cifar10 --seed 2 --arch resnet18 --epochs 100 --num_indexes_to_replace 1900 --class_to_replace 0
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_3500_0_cifar10_resnet18_2model.pth.tar --data ./data --dataset cifar10 --seed 2 --arch resnet18 --epochs 100 --num_indexes_to_replace 3500 --class_to_replace 0
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_2250_-1_cifar10_resnet18_3model.pth.tar --data ./data --dataset cifar10 --seed 3 --arch resnet18 --epochs 100 --num_indexes_to_replace 2250 --class_to_replace -1
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_4500_-1_cifar10_resnet18_3model.pth.tar --data ./data --dataset cifar10 --seed 3 --arch resnet18 --epochs 100 --num_indexes_to_replace 4500 --class_to_replace -1
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_22500_-1_cifar10_resnet18_3model.pth.tar --data ./data --dataset cifar10 --seed 3 --arch resnet18 --epochs 100 --num_indexes_to_replace 22500 --class_to_replace -1
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_450_0_cifar10_resnet18_3model.pth.tar --data ./data --dataset cifar10 --seed 3 --arch resnet18 --epochs 100 --num_indexes_to_replace 450 --class_to_replace 0
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_1900_0_cifar10_resnet18_3model.pth.tar --data ./data --dataset cifar10 --seed 3 --arch resnet18 --epochs 100 --num_indexes_to_replace 1900 --class_to_replace 0
+-u main_ideal.py --save_dir ./results/cifar10 --mask ./results/cifar10/ideal_3500_0_cifar10_resnet18_3model.pth.tar --data ./data --dataset cifar10 --seed 3 --arch resnet18 --epochs 100 --num_indexes_to_replace 3500 --class_to_replace 0

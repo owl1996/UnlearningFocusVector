@@ -21,7 +21,7 @@ nums_index_to_replace = {
 }
 
 base_script = "-u mlflow_forget.py"
-
+array_param_file.py
 dataset = ["cifar10"]
 # unlearn = ["NGPlus", "mix_NGPlus", "SRL", "mix_SRL", "SalUn", "FT", "pSalUn"]
 unlearn = ["NGPlus", "VarGrad", "SalGrad"]
@@ -44,7 +44,7 @@ commands = [base_script
             + " --epochs " + str(baseline_train_epochs[_dataset])
             + " --num_indexes_to_replace " + str(_nums_index_to_replace)
             + " --class_to_replace " + str(_class_to_replace)
-            + " --beta " + "0.95"
+            + " --beta " + "0.9"
             for (_dataset, _unlearn, _unlearn_epochs, _seed, _arch, _class_to_replace) in itertools.product(dataset, unlearn, unlearn_epochs, seeds, archs, class_to_replace)
             for _nums_index_to_replace in nums_index_to_replace[_dataset][_class_to_replace]
 ]
