@@ -32,7 +32,7 @@ class_to_replace = [-1, 0]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
-            + " --mask ./results/" + _dataset + "/" + _dataset + "_"  + _arch + "_" + _seed + "model.pth.tar" 
+            # + " --mask ./results/" + _dataset + "/" + _dataset + "_"  + _arch + "_" + _seed + "model.pth.tar" 
             # + " --unlearn " + _unlearn
             # + " --unlearn_epochs " + _unlearn_epochs
             # + " --unlearn_lr 0.0001"
@@ -63,7 +63,7 @@ commands = [base_script
 base_script = "-u main_ideal.py"
 ncommands = [base_script
             + " --save_dir ./results/" + _dataset
-            + " --mask ./results/" + _dataset + "/" + "ideal_" + str(_nums_index_to_replace) + "_" + str(_class_to_replace) + "_"  + _dataset + "_"  + _arch + "_" + _seed + "model.pth.tar" 
+            # + " --mask ./results/" + _dataset + "/" + _dataset + "_"  + _arch + "_" + _seed + "model.pth.tar" 
             # + " --unlearn " + _unlearn
             # + " --unlearn_epochs " + _unlearn_epochs
             # + " --unlearn_lr 0.0001"

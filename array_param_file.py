@@ -1,6 +1,4 @@
 import itertools
-import os
-
 # Liste de tes commandes sous forme de strings
 baseline_train_epochs = {
     "cifar10": 100,
@@ -21,9 +19,8 @@ nums_index_to_replace = {
 }
 
 base_script = "-u mlflow_forget.py"
-array_param_file.py
 dataset = ["cifar10"]
-# unlearn = ["NGPlus", "mix_NGPlus", "SRL", "mix_SRL", "SalUn", "FT", "pSalUn"]
+unlearn = ["NGPlus", "mix_NGPlus", "SRL", "mix_SRL", "SalUn", "FT", "pSalUn"]
 unlearn = ["NGPlus", "VarGrad", "SalGrad"]
 unlearn_epochs = ["10"]
 archs = ["resnet18"]
