@@ -115,8 +115,8 @@ def VarGrad(data_loaders, model, criterion, optimizer, epoch, args):
             m_forget, v_forget = optimizer_forget.state[param]["exp_avg"], optimizer_forget.state[param]["exp_avg_sq"]
             _, v_retain = optimizer_retain.state[param]["exp_avg"], optimizer_retain.state[param]["exp_avg_sq"]
 
-            signal_noise_forget = m_forget / (v_forget + 1e-1).sqrt()
-            signal_noise_retain = param.grad / (v_retain + 1e-1).sqrt()
+            signal_noise_forget = m_forget / (v_forget + 1e-8).sqrt()
+            signal_noise_retain = param.grad / (v_retain + 1e-8).sqrt()
 
             cdf_forget = normal_dist.cdf(signal_noise_forget)
             cdf_retain = normal_dist.cdf(signal_noise_retain)

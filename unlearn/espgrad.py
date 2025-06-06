@@ -115,15 +115,18 @@ def EspGrad(data_loaders, model, criterion, optimizer, epoch, args):
             m_forget, v_forget = optimizer_forget.state[param]["exp_avg"], optimizer_forget.state[param]["exp_avg_sq"]
             _, v_retain = optimizer_retain.state[param]["exp_avg"], optimizer_retain.state[param]["exp_avg_sq"]
 
-            signal_noise_forget = m_forget / (v_forget + 1e-1).sqrt()
-            signal_noise_retain = param.grad / (v_retain + 1e-1).sqrt()
+            # 1e-8 to avoid division by zero
+            signal_noise_forget = m_forget / (v_forget + 1e-8).sqrt()
+            signal_noise_retain = param.grad / (v_retain + 1e-8).sqrt()
 
             cdf_forget = normal_dist.cdf(signal_noise_forget)
             cdf_retain = normal_dist.cdf(signal_noise_retain)
 
             # quantiles mask
             vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
-            # mask = vmask >= args.quantile
+
+            # Save vmask to study the distribution of cdf
+            torch.save(vmask, f"{args.save_dir}/vmask/vmask_{idx_param}_{epoch}.pt")
 
             # # imbriqué
             # mask_grad = mask * mask_grads[idx_param]

@@ -16,10 +16,10 @@ import evaluation
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
 
 @iterative_unlearn
-def ProbGrad(data_loaders, model, criterion, optimizer, epoch, args):
+def FocalGrad(data_loaders, model, criterion, optimizer, epoch, args):
     """
-    ProbGrad unlearning method.
-
+    EspGrad unlearning method.
+    
     We compute the different gradients (according to NegGradPlus) of the losses with respect to the model parameters.
     We estimate the variance of the gradients of the parameters.
     We put a probabilistic threshold so that we mask the parameters that are unsure to be updated.
@@ -115,19 +115,14 @@ def ProbGrad(data_loaders, model, criterion, optimizer, epoch, args):
             m_forget, v_forget = optimizer_forget.state[param]["exp_avg"], optimizer_forget.state[param]["exp_avg_sq"]
             _, v_retain = optimizer_retain.state[param]["exp_avg"], optimizer_retain.state[param]["exp_avg_sq"]
 
-            signal_noise_forget = m_forget / (v_forget + 1e-8).sqrt()
-            signal_noise_retain = param.grad / (v_retain + 1e-8).sqrt()
+            signal_noise_forget = m_forget / (v_forget + 1e-1).sqrt()
+            signal_noise_retain = param.grad / (v_retain + 1e-1).sqrt()
 
             cdf_forget = normal_dist.cdf(signal_noise_forget)
             cdf_retain = normal_dist.cdf(signal_noise_retain)
 
             # quantiles mask
             vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
-
-            
-            # Generate Bernouilli mask with probabilities vmask
-            mask = torch.bernoulli(vmask)
-
             # mask = vmask >= args.quantile
 
             # # imbriqué
@@ -135,7 +130,7 @@ def ProbGrad(data_loaders, model, criterion, optimizer, epoch, args):
             # mask_grads[idx_param] = mask_grad
 
             # update grad
-            param.grad = mask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
+            param.grad = vmask ** 5 * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
 
             # print("Ratio of masked parameters : ", mask_grad.sum() / mask.numel())
 

@@ -22,6 +22,7 @@ from .vargrad import VarGrad
 from .salgrad import SalGrad
 from .espgrad import EspGrad
 from .probgrad import ProbGrad
+from .focalgrad import FocalGrad
 
 def raw(data_loaders, model, criterion, args):
     pass
@@ -85,5 +86,7 @@ def get_unlearn_method(name):
         return EspGrad
     elif name == "ProbGrad":
         return ProbGrad
+    elif name == "FocalGrad":
+        return FocalGrad
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")
