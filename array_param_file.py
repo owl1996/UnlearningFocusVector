@@ -25,7 +25,7 @@ unlearn = ["NGPlus", "VarGrad", "SalGrad", "EspGrad", "ProbGrad"]
 unlearn_epochs = ["10"]
 archs = ["resnet18"]
 seeds = ["1", "2", "3"]
-quantiles = ["0.3", "0,4", "0.5", "0.6"]
+quantiles = ["0.3", "0.4", "0.5", "0.6"]
 class_to_replace = [-1, 0]
 
 commands = [base_script
