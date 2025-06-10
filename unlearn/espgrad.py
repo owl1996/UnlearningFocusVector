@@ -126,7 +126,7 @@ def EspGrad(data_loaders, model, criterion, optimizer, epoch, args):
             vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
 
             # Save vmask to study the distribution of cdf
-            torch.save(vmask, f"{args.save_dir}/vmask/vmask_{idx_param}_{epoch}.pt")
+            # torch.save(vmask, f"{args.save_dir}/vmask/vmask_{idx_param}_{epoch}.pt")
 
             # # imbriqué
             # mask_grad = mask * mask_grads[idx_param]
