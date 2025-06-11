@@ -41,7 +41,7 @@ def SalGrad(data_loaders, model, criterion, optimizer, epoch, args):
     mlflow.log_param("beta", args.beta)
     mlflow.log_param("quantile", args.quantile)
     mlflow.log_param("num_indexes_to_replace", args.num_indexes_to_replace)
-    mlflow.log_param("class_to_replace", -1)
+    mlflow.log_param("class_to_replace", args.class_to_replace)
     mlflow.log_param("arch", args.arch) 
     mlflow.log_param("dataset", args.dataset)
 
@@ -79,6 +79,7 @@ def SalGrad(data_loaders, model, criterion, optimizer, epoch, args):
         original_params = [param.detach().clone() for param in model.parameters()]
 
         loss = - criterion(model(image), target)
+        optimizer.zero_grad()
         loss.backward()
 
         grad_forget = [param.grad for param in model.parameters()]
@@ -94,6 +95,7 @@ def SalGrad(data_loaders, model, criterion, optimizer, epoch, args):
         model.zero_grad()
         output_clean = model(image)
         loss = criterion(output_clean, target)
+        optimizer.zero_grad()
         loss.backward()
 
         with torch.no_grad():

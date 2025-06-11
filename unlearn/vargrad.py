@@ -58,7 +58,6 @@ def VarGrad(data_loaders, model, criterion, optimizers, epoch, args):
 
     # mask_grads = [torch.ones_like(param) for param in model.parameters()]
 
-    optimizer, optimizer_forget, optimizer_retain = optimizers
 
     start = time.time()
     model.train()
@@ -70,19 +69,21 @@ def VarGrad(data_loaders, model, criterion, optimizers, epoch, args):
 
         if epoch < args.warmup:
                 utils.warmup_lr(
-                    epoch, i + 1, optimizer, one_epoch_step=len(forget_loader), args=args
+                    epoch, i + 1, optimizers[0], one_epoch_step=len(forget_loader), args=args
                 )
 
         model.zero_grad()
         original_params = [param.detach().clone() for param in model.parameters()]
 
         loss = - criterion(model(image), target)
+        for optimizer in optimizers:
+            optimizer.zero_grad()
         loss.backward()
 
         grad_forget = [param.grad for param in model.parameters()]
 
         with torch.no_grad():
-            optimizer_forget.step()
+            optimizers[1].step()
             for param, orig in zip(model.parameters(), original_params):
                 param.copy_(orig)
 
@@ -93,10 +94,12 @@ def VarGrad(data_loaders, model, criterion, optimizers, epoch, args):
         model.zero_grad()
         output_clean = model(image)
         loss = criterion(output_clean, target)
+        for optimizer in optimizers:
+            optimizer.zero_grad()
         loss.backward()
 
         with torch.no_grad():
-            optimizer_retain.step()
+            optimizers[2].step()
             for param, orig in zip(model.parameters(), original_params):
                 param.copy_(orig)
         
@@ -106,8 +109,8 @@ def VarGrad(data_loaders, model, criterion, optimizers, epoch, args):
         for idx_param, param in enumerate(model.parameters()):
 
             # saved momentums in optimizers
-            m_forget, v_forget = optimizer_forget.state[param]["exp_avg"], optimizer_forget.state[param]["exp_avg_sq"]
-            _, v_retain = optimizer_retain.state[param]["exp_avg"], optimizer_retain.state[param]["exp_avg_sq"]
+            m_forget, v_forget = optimizers[1].state[param]["exp_avg"], optimizers[1].state[param]["exp_avg_sq"]
+            _, v_retain = optimizers[2].state[param]["exp_avg"], optimizers[2].state[param]["exp_avg_sq"]
 
             signal_noise_forget = m_forget / (v_forget + 1e-8).sqrt()
             signal_noise_retain = param.grad / (v_retain + 1e-8).sqrt()
@@ -128,7 +131,7 @@ def VarGrad(data_loaders, model, criterion, optimizers, epoch, args):
 
             # print("Ratio of masked parameters : ", mask_grad.sum() / mask.numel())
 
-        optimizer.step()
+        optimizers[0].step()
 
         # measure accuracy and record loss
         output = output_clean.float()

@@ -115,7 +115,7 @@ def _iterative_unlearn_impl(unlearn_iter_func):
             )
             if args.unlearn in ["ProbGrad", "EspGrad", "VarGrad"]:
                 train_acc = unlearn_iter_func(
-                    data_loaders, model, criterion, (optimizer, optimizer_forget, optimizer_retain), epoch, args
+                    data_loaders, model, criterion, [optimizer, optimizer_forget, optimizer_retain], epoch, args
                 )
                 scheduler.step()
             else :

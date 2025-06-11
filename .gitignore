@@ -19,6 +19,7 @@ ffcv/
 lib/
 lib64/
 mlruns/
+mlruns2/
 parts/
 
 results/cifar10/
