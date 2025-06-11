@@ -60,12 +60,8 @@ def SalGrad(data_loaders, model, criterion, optimizer, epoch, args):
     else:
         device = torch.device("cpu")
 
-    mask_grads = [torch.ones_like(param) for param in model.parameters()]
-    
-    optimizer_forget = torch.optim.Adam(params = model.parameters())
-    optimizer_retain = torch.optim.Adam(params = model.parameters())
-
-    optimizer = torch.optim.Adam(lr = args.unlearn_lr, params = model.parameters())
+    # imbrique
+    # mask_grads = [torch.ones_like(param) for param in model.parameters()]
 
     start = time.time()
     model.train()
@@ -88,7 +84,6 @@ def SalGrad(data_loaders, model, criterion, optimizer, epoch, args):
         grad_forget = [param.grad for param in model.parameters()]
 
         with torch.no_grad():
-            optimizer_forget.step()
             for param, orig in zip(model.parameters(), original_params):
                 param.copy_(orig)
 
@@ -102,7 +97,6 @@ def SalGrad(data_loaders, model, criterion, optimizer, epoch, args):
         loss.backward()
 
         with torch.no_grad():
-            optimizer_retain.step()
             for param, orig in zip(model.parameters(), original_params):
                 param.copy_(orig)
         
@@ -113,12 +107,12 @@ def SalGrad(data_loaders, model, criterion, optimizer, epoch, args):
 
             mask = (torch.abs(grad_forget[idx_param]) >= torch.quantile(torch.abs(grad_forget[idx_param]), args.quantile))
 
-            # imbriqué
-            mask_grad = mask * mask_grads[idx_param]
-            mask_grads[idx_param] = mask_grad
+            # # imbriqué
+            # mask_grad = mask * mask_grads[idx_param]
+            # mask_grads[idx_param] = mask_grad
 
             # update grad
-            param.grad = mask_grad * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
+            param.grad = mask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
 
             # print("Ratio of masked parameters : ", mask_grad.sum() / mask.numel())
 

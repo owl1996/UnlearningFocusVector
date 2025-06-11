@@ -70,12 +70,9 @@ def _iterative_unlearn_impl(unlearn_iter_func):
             # rewind, initialization is a full model architecture without masks
             model.load_state_dict(initialization, strict=True)
             prune_model_custom(model, current_mask)
-        optimizer = torch.optim.SGD(
-            model.parameters(),
-            args.unlearn_lr,
-            momentum=args.momentum,
-            weight_decay=args.weight_decay,
-        )
+        optimizer = torch.optim.Adam(model.parameters(), args.unlearn_lr)
+        optimizer_forget = torch.optim.Adam(params = model.parameters())
+        optimizer_retain = torch.optim.Adam(params = model.parameters())
         if args.imagenet_arch and args.unlearn == "retrain":
             lambda0 = (
                 lambda cur_iter: (cur_iter + 1) / args.warmup
@@ -108,6 +105,7 @@ def _iterative_unlearn_impl(unlearn_iter_func):
             # learning rate rewinding
             for _ in range(args.rewind_epoch):
                 scheduler.step()
+            
         for epoch in range(0, args.unlearn_epochs):
             start_time = time.time()
             print(
@@ -115,10 +113,16 @@ def _iterative_unlearn_impl(unlearn_iter_func):
                     epoch, optimizer.state_dict()["param_groups"][0]["lr"]
                 )
             )
-            train_acc = unlearn_iter_func(
-                data_loaders, model, criterion, optimizer, epoch, args
-            )
-            scheduler.step()
+            if args.unlearn in ["ProbGrad", "EspGrad", "VarGrad"]:
+                train_acc = unlearn_iter_func(
+                    data_loaders, model, criterion, (optimizer, optimizer_forget, optimizer_retain), epoch, args
+                )
+                scheduler.step()
+            else :
+                train_acc = unlearn_iter_func(
+                    data_loaders, model, criterion, optimizer, epoch, args
+                )
+                scheduler.step()
 
             print("one epoch duration:{}".format(time.time() - start_time))
 

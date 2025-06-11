@@ -53,10 +53,7 @@ def main():
         setup_seed(args.seed)
 
     # prepare dataset
-    if args.dataset == "cifar10" or args.dataset == "cifar100":
-        model, train_loader, val_loader, test_loader, _ = setup_model_dataset(args)
-    else:
-        model, train_loader, val_loader, test_loader = setup_model_dataset(args)
+    model, train_loader, val_loader, test_loader, _ = setup_model_dataset(args)
     model.to(device)
 
     criterion = nn.CrossEntropyLoss()

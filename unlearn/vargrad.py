@@ -16,7 +16,7 @@ import evaluation
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
 
 @iterative_unlearn
-def VarGrad(data_loaders, model, criterion, optimizer, epoch, args):
+def VarGrad(data_loaders, model, criterion, optimizers, epoch, args):
     """
     VarGrad unlearning method.
     
@@ -25,11 +25,7 @@ def VarGrad(data_loaders, model, criterion, optimizer, epoch, args):
     We put a probabilistic threshold so that we mask the parameters that are unsure to be updated.
 
     """
-    # TODO : Compute the moments without calling the optimizers
-    # betas = (0.9, 0.999)
-    # eps = 1e-8
-    # moments = ([torch.zeros_like(param) for param in model.parameters()], [torch.zeros_like(param) for param in model.parameters()])
-
+    
     mlflow.start_run()
     mlflow.log_param("seed", args.seed)
     mlflow.log_param("save_dir", args.save_dir)
@@ -60,15 +56,13 @@ def VarGrad(data_loaders, model, criterion, optimizer, epoch, args):
     else:
         device = torch.device("cpu")
 
-    mask_grads = [torch.ones_like(param) for param in model.parameters()]
-    
-    optimizer_forget = torch.optim.Adam(params = model.parameters())
-    optimizer_retain = torch.optim.Adam(params = model.parameters())
+    # mask_grads = [torch.ones_like(param) for param in model.parameters()]
 
-    optimizer = torch.optim.Adam(lr = args.unlearn_lr, params = model.parameters())
+    optimizer, optimizer_forget, optimizer_retain = optimizers
 
     start = time.time()
     model.train()
+
     for i, (image, target) in enumerate(forget_loader):
         # NegGrad : Montée de Gradient sur le forget
         image = image.to(device)
@@ -125,12 +119,12 @@ def VarGrad(data_loaders, model, criterion, optimizer, epoch, args):
             vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
             mask = vmask >= args.quantile
 
-            # imbriqué
-            mask_grad = mask * mask_grads[idx_param]
-            mask_grads[idx_param] = mask_grad
+            # # imbriqué
+            # mask_grad = mask * mask_grads[idx_param]
+            # mask_grads[idx_param] = mask_grad
 
             # update grad
-            param.grad = mask_grad * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
+            param.grad = mask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
 
             # print("Ratio of masked parameters : ", mask_grad.sum() / mask.numel())
 

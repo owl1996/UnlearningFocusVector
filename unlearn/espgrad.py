@@ -16,7 +16,7 @@ import evaluation
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
 
 @iterative_unlearn
-def EspGrad(data_loaders, model, criterion, optimizer, epoch, args):
+def EspGrad(data_loaders, model, criterion, optimizers, epoch, args):
     """
     EspGrad unlearning method.
     
@@ -25,11 +25,7 @@ def EspGrad(data_loaders, model, criterion, optimizer, epoch, args):
     We put a probabilistic threshold so that we mask the parameters that are unsure to be updated.
 
     """
-    # TODO : Compute the moments without calling the optimizers
-    # betas = (0.9, 0.999)
-    # eps = 1e-8
-    # moments = ([torch.zeros_like(param) for param in model.parameters()], [torch.zeros_like(param) for param in model.parameters()])
-
+    
     mlflow.start_run()
     mlflow.log_param("seed", args.seed)
     mlflow.log_param("save_dir", args.save_dir)
@@ -62,10 +58,7 @@ def EspGrad(data_loaders, model, criterion, optimizer, epoch, args):
 
     # mask_grads = [torch.ones_like(param) for param in model.parameters()]
     
-    optimizer_forget = torch.optim.Adam(params = model.parameters())
-    optimizer_retain = torch.optim.Adam(params = model.parameters())
-
-    optimizer = torch.optim.Adam(lr = args.unlearn_lr, params = model.parameters())
+    optimizer, optimizer_forget, optimizer_retain = optimizers
 
     start = time.time()
     model.train()
