@@ -20,7 +20,7 @@ lib/
 lib64/
 mlruns/
 parts/
-results/
+
 results/cifar10/
 results/cifar100/
 results/svhn/
