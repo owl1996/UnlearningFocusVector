@@ -22,6 +22,9 @@ mlruns/
 parts/
 results/cifar10/
 results/cifar100/
+results/svhn/
+results/imagenet/
+results/tiny-imagenet/
 sdist/
 var/
 wheels/
