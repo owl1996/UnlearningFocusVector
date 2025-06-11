@@ -47,7 +47,7 @@ def SalUn(data_loaders, model, criterion, optimizer, epoch, args):
 
     # switch to train mode
     num_classes = list(model.children())[-1].out_features
-    mask_grads = [torch.ones_like(param) for param in model.parameters()]
+    
     model.train()
 
     start = time.time()    
@@ -65,13 +65,16 @@ def SalUn(data_loaders, model, criterion, optimizer, epoch, args):
             loss = -criterion(output_clean, target)
             optimizer.zero_grad()
             loss.backward()
-
+            
+            # mask_grads = [torch.ones_like(param) for param in model.parameters()]
+            mask_grads = []
             for idx_param, param in enumerate(model.parameters()):
                 # salUn
                 mask = (torch.abs(param.grad) >= torch.quantile(torch.abs(param.grad), args.quantile, interpolation='midpoint'))
                 # imbriqué
-                mask_grad = mask * mask_grads[idx_param]
-                mask_grads[idx_param] = mask_grad
+                # mask_grad = mask * mask_grads[idx_param]
+                # mask_grads[idx_param] = mask_grad
+                mask_grads.append(mask)
 
             # compute output
             model.zero_grad()
@@ -143,12 +146,14 @@ def SalUn(data_loaders, model, criterion, optimizer, epoch, args):
             optimizer.zero_grad()
             loss.backward()
 
+            mask_grads = []
             for idx_param, param in enumerate(model.parameters()):
                 # salUn
                 mask = (torch.abs(param.grad) >= torch.quantile(torch.abs(param.grad), args.quantile, interpolation='midpoint'))
                 # imbriqué
-                mask_grad = mask * mask_grads[idx_param]
-                mask_grads[idx_param] = mask_grad
+                # mask_grad = mask * mask_grads[idx_param]
+                # mask_grads[idx_param] = mask_grad
+                mask_grads.append(mask)
 
             # compute output
             model.zero_grad()

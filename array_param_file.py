@@ -20,8 +20,8 @@ nums_index_to_replace = {
 
 base_script = "-u mlflow_forget.py"
 dataset = ["cifar10"]
-unlearn = ["NGPlus", "mix_NGPlus", "SRL", "mix_SRL", "SalUn", "FT", "pSalUn"]
-unlearn = ["NGPlus", "VarGrad", "SalGrad", "EspGrad", "FT", "SalUn"]
+# unlearn = ["NGPlus", "mix_NGPlus", "SRL", "mix_SRL", "SalUn", "FT", "pSalUn"]
+unlearn = ["NGPlus", "VarGrad", "SalGrad", "EspGrad", "FT", "SalUn", "SRL"]
 unlearn_epochs = ["10"]
 archs = ["resnet18"]
 seeds = ["1", "2", "3"]

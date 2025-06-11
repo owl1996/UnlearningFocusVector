@@ -155,6 +155,7 @@ def main():
             and args.unlearn != "retrain_ls"
         ):
             model.load_state_dict(checkpoint, strict=False)
+            model.to(device)
 
         unlearn_method = unlearn.get_unlearn_method(args.unlearn)
 

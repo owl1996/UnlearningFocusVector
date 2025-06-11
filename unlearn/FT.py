@@ -46,6 +46,7 @@ def FT_iter(data_loaders, model, criterion, optimizer, epoch, args, with_l1=Fals
     mlflow.log_param("dataset", args.dataset)
 
     train_loader = data_loaders["retain"]
+    forget_loader = data_loaders["forget"]
 
     losses = utils.AverageMeter()
     top1 = utils.AverageMeter()
@@ -143,7 +144,7 @@ def FT_iter(data_loaders, model, criterion, optimizer, epoch, args, with_l1=Fals
         mlflow.log_metric(name, val_acc)
     
     MIA_trainer_loader = torch.utils.data.DataLoader(
-                torch.utils.data.Subset(retain_loader.dataset, list(range(len(data_loaders["test"].dataset)))), batch_size=args.batch_size, shuffle=False
+                torch.utils.data.Subset(train_loader.dataset, list(range(len(data_loaders["test"].dataset)))), batch_size=args.batch_size, shuffle=False
             )
     MIA_classifiers = evaluation.SVC_classifiers(MIA_trainer_loader, data_loaders["test"], model)
     # print(evaluation.SVC_predict(MIA_classifiers, forget_loader, model))
