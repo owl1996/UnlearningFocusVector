@@ -7,6 +7,10 @@ from .impl import iterative_unlearn
 sys.path.append(".")
 from imagenet import get_x_y_from_data_dict
 
+import mlflow
+from trainer import validate
+import evaluation
+
 @iterative_unlearn
 def SalUn(data_loaders, model, criterion, optimizer, epoch, args):
     mlflow.start_run()
