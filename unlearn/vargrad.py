@@ -16,7 +16,7 @@ import evaluation
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
 
 @iterative_unlearn
-def VarGrad(data_loaders, model, criterion, optimizers, epoch, args):
+def VarGrad(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
     """
     VarGrad unlearning method.
     
@@ -25,6 +25,7 @@ def VarGrad(data_loaders, model, criterion, optimizers, epoch, args):
     We put a probabilistic threshold so that we mask the parameters that are unsure to be updated.
 
     """
+    rho = 0.9 # momentum for the variance estimation
     
     mlflow.start_run()
     mlflow.log_param("seed", args.seed)
@@ -58,7 +59,6 @@ def VarGrad(data_loaders, model, criterion, optimizers, epoch, args):
 
     # mask_grads = [torch.ones_like(param) for param in model.parameters()]
 
-
     start = time.time()
     model.train()
 
@@ -69,23 +69,22 @@ def VarGrad(data_loaders, model, criterion, optimizers, epoch, args):
 
         if epoch < args.warmup:
                 utils.warmup_lr(
-                    epoch, i + 1, optimizers[0], one_epoch_step=len(forget_loader), args=args
+                    epoch, i + 1, optimizer, one_epoch_step=len(forget_loader), args=args
                 )
 
         model.zero_grad()
-        original_params = [param.detach().clone() for param in model.parameters()]
 
         loss = - criterion(model(image), target)
-        for optimizer in optimizers:
-            optimizer.zero_grad()
+        optimizer.zero_grad()
         loss.backward()
 
         grad_forget = [param.grad for param in model.parameters()]
 
-        with torch.no_grad():
-            optimizers[1].step()
-            for param, orig in zip(model.parameters(), original_params):
-                param.copy_(orig)
+        # Compute the moving average of the gradients forget
+        if VF is None :
+            VF = [grad * grad for grad in grad_forget]
+        else :
+            VF = [rho * grad * grad + (1 - rho) * prev_grad for grad, prev_grad in zip(grad_forget, VF)]
 
         # Plus : Descente sur le retain
         _, data = next(retain_loader_iter)
@@ -94,44 +93,40 @@ def VarGrad(data_loaders, model, criterion, optimizers, epoch, args):
         model.zero_grad()
         output_clean = model(image)
         loss = criterion(output_clean, target)
-        for optimizer in optimizers:
-            optimizer.zero_grad()
+        optimizer.zero_grad()
         loss.backward()
 
-        with torch.no_grad():
-            optimizers[2].step()
-            for param, orig in zip(model.parameters(), original_params):
-                param.copy_(orig)
-        
-        del original_params
+        if VR is None:
+            VR = [param.grad * param.grad for param in model.parameters()]
+        else:
+            VR = [rho * param.grad * param.grad + (1 - rho) * prev_grad for param, prev_grad in zip(model.parameters(), VR)]
 
         # Compute the mask
         for idx_param, param in enumerate(model.parameters()):
 
-            # saved momentums in optimizers
-            m_forget, v_forget = optimizers[1].state[param]["exp_avg"], optimizers[1].state[param]["exp_avg_sq"]
-            _, v_retain = optimizers[2].state[param]["exp_avg"], optimizers[2].state[param]["exp_avg_sq"]
-
-            signal_noise_forget = m_forget / (v_forget + 1e-8).sqrt()
-            signal_noise_retain = param.grad / (v_retain + 1e-8).sqrt()
+            signal_noise_forget = grad_forget[idx_param] / (VF[idx_param] + 1e-8).sqrt()
+            signal_noise_retain = param.grad / (VR[idx_param] + 1e-8).sqrt()
 
             cdf_forget = normal_dist.cdf(signal_noise_forget)
             cdf_retain = normal_dist.cdf(signal_noise_retain)
 
             # quantiles mask
             vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
-            mask = vmask >= args.quantile
+            mask = (vmask >= args.quantile)
 
             # # imbriqué
             # mask_grad = mask * mask_grads[idx_param]
             # mask_grads[idx_param] = mask_grad
+
+            # Save vmask to study the distribution of cdf
+            # torch.save(vmask, f"{args.save_dir}/vmask/vmask_{idx_param}_{epoch}.pt")
 
             # update grad
             param.grad = mask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
 
             # print("Ratio of masked parameters : ", mask_grad.sum() / mask.numel())
 
-        optimizers[0].step()
+        optimizer.step()
 
         # measure accuracy and record loss
         output = output_clean.float()
@@ -176,4 +171,4 @@ def VarGrad(data_loaders, model, criterion, optimizers, epoch, args):
     mlflow.end_run()
     print("retain_accuracy {top1.avg:.3f}".format(top1=top1))
 
-    return top1.avg
+    return top1.avg, VF, VR

@@ -20,6 +20,7 @@ lib/
 lib64/
 mlruns/
 mlruns2/
+mlruns3/
 parts/
 
 results/cifar10/
