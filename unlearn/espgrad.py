@@ -16,7 +16,7 @@ import evaluation
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
 
 @iterative_unlearn
-def VarGrad(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
+def EspGrad(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
     """
     VarGrad unlearning method.
     
