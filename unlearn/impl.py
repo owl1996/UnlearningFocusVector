@@ -11,7 +11,6 @@ import utils
 from pruner import extract_mask, prune_model_custom, remove_prune
 
 sys.path.append(".")
-from trainer import validate
 
 
 def plot_training_curve(training_result, save_dir, prefix):
@@ -72,23 +71,8 @@ def _iterative_unlearn_impl(unlearn_iter_func):
             prune_model_custom(model, current_mask)
         optimizer = torch.optim.Adam(model.parameters(), args.unlearn_lr)
         if args.imagenet_arch and args.unlearn == "retrain":
-            lambda0 = (
-                lambda cur_iter: (cur_iter + 1) / args.warmup
-                if cur_iter < args.warmup
-                else (
-                    0.5
-                    * (
-                        1.0
-                        + np.cos(
-                            np.pi
-                            * (
-                                (cur_iter - args.warmup)
-                                / (args.unlearn_epochs - args.warmup)
-                            )
-                        )
-                    )
-                )
-            )
+            def lambda0(cur_iter):
+                return (cur_iter + 1) / args.warmup if cur_iter < args.warmup else 0.5 * (1.0 + np.cos(np.pi * ((cur_iter - args.warmup) / (args.unlearn_epochs - args.warmup))))
             scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda0)
         else:
             scheduler = torch.optim.lr_scheduler.MultiStepLR(
@@ -113,11 +97,11 @@ def _iterative_unlearn_impl(unlearn_iter_func):
                 )
             )
             if args.unlearn in ["NGradFocus", "NGradMask", "SRGradFocus", "SRGradMask"]:
-                train_acc, VF, VR = unlearn_iter_func(
+                _, VF, VR = unlearn_iter_func(
                     data_loaders, model, criterion, optimizer, epoch, args, VF, VR
                 )
             else:
-                train_acc = unlearn_iter_func(
+                unlearn_iter_func(
                     data_loaders, model, criterion, optimizer, epoch, args
                 )
                 scheduler.step()

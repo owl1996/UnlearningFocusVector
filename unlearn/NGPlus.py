@@ -8,7 +8,7 @@ sys.path.append(".")
 from imagenet import get_x_y_from_data_dict
 from trainer import validate
 import evaluation
-import mlflow
+import mlflow # type: ignore
 
 @iterative_unlearn
 def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):

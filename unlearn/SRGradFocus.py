@@ -4,13 +4,12 @@ import torch
 import utils
 from .impl import iterative_unlearn
 
-import mlflow
+import mlflow # type: ignore
 from trainer import validate
 import evaluation
 
 
 sys.path.append(".")
-from imagenet import get_x_y_from_data_dict
 
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
 
