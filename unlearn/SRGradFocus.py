@@ -2,13 +2,12 @@ import sys
 import time
 import torch
 import utils
-import vutils
 from .impl import iterative_unlearn
 
 import mlflow
-
 from trainer import validate
 import evaluation
+
 
 sys.path.append(".")
 from imagenet import get_x_y_from_data_dict
@@ -16,19 +15,8 @@ from imagenet import get_x_y_from_data_dict
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
 
 @iterative_unlearn
-def SalGrad(data_loaders, model, criterion, optimizer, epoch, args):
-    """
-    VarGrad unlearning method.
-    
-    We compute the different gradients (according to NegGradPlus) of the losses with respect to the model parameters.
-    We estimate the variance of the gradients of the parameters.
-    We put a probabilistic threshold so that we mask the parameters that are unsure to be updated.
-
-    """
-    # TODO : Compute the moments without calling the optimizers
-    # betas = (0.9, 0.999)
-    # eps = 1e-8
-    # moments = ([torch.zeros_like(param) for param in model.parameters()], [torch.zeros_like(param) for param in model.parameters()])
+def SRGradFocus(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
+    rho = 0.9  # momentum for the variance estimation
 
     mlflow.start_run()
     mlflow.log_param("seed", args.seed)
@@ -46,8 +34,8 @@ def SalGrad(data_loaders, model, criterion, optimizer, epoch, args):
     mlflow.log_param("dataset", args.dataset)
 
     forget_loader = data_loaders["forget"]
-    retain_loader = data_loaders["retain"]
-    retain_loader_iter = enumerate(retain_loader)
+    retain_loader = torch.utils.data.DataLoader(data_loaders["retain"].dataset, batch_size = args.batch_size, shuffle=True)
+    retain_loader_iter = iter(retain_loader)
 
     losses = utils.AverageMeter()
     top1 = utils.AverageMeter()
@@ -60,63 +48,63 @@ def SalGrad(data_loaders, model, criterion, optimizer, epoch, args):
     else:
         device = torch.device("cpu")
 
-    # imbrique
-    # mask_grads = [torch.ones_like(param) for param in model.parameters()]
-
-    start = time.time()
+    # switch to train mode
+    num_classes = list(model.children())[-1].out_features
     model.train()
+
+    start = time.time()    
     for i, (image, target) in enumerate(forget_loader):
-        # NegGrad : Montée de Gradient sur le forget
+        if epoch < args.warmup:
+            utils.warmup_lr(
+                epoch, i + 1, optimizer, one_epoch_step=len(forget_loader), args=args
+            )
+
         image = image.to(device)
         target = target.to(device)
-
-        if epoch < args.warmup:
-                utils.warmup_lr(
-                    epoch, i + 1, optimizer, one_epoch_step=len(forget_loader), args=args
-                )
-
+        
         model.zero_grad()
-        original_params = [param.detach().clone() for param in model.parameters()]
 
-        loss = - criterion(model(image), target)
+        # compute output
+        output = model(image)
+        target = (target + torch.randint(1, num_classes, target.shape, device=device)) % num_classes
+        loss = criterion(output, target)
         optimizer.zero_grad()
         loss.backward()
 
         grad_forget = [param.grad for param in model.parameters()]
 
-        with torch.no_grad():
-            for param, orig in zip(model.parameters(), original_params):
-                param.copy_(orig)
+        # Compute the moving average of the gradients forget
+        if VF is None :
+            VF = [grad * grad for grad in grad_forget]
+        else :
+            VF = [rho * grad * grad + (1 - rho) * prev_grad for grad, prev_grad in zip(grad_forget, VF)]
 
-        # Plus : Descente sur le retain
-        _, data = next(retain_loader_iter)
+        # compute loss and grad on the retain
+        data = next(retain_loader_iter)
         image, target = data[0].to(device), data[1].to(device)
 
-        model.zero_grad()
         output_clean = model(image)
+
         loss = criterion(output_clean, target)
         optimizer.zero_grad()
         loss.backward()
 
-        with torch.no_grad():
-            for param, orig in zip(model.parameters(), original_params):
-                param.copy_(orig)
-        
-        del original_params
+        if VR is None:
+            VR = [param.grad * param.grad for param in model.parameters()]
+        else:
+            VR = [rho * param.grad * param.grad + (1 - rho) * prev_grad for param, prev_grad in zip(model.parameters(), VR)]
 
-        # Compute the mask
         for idx_param, param in enumerate(model.parameters()):
 
-            mask = (torch.abs(grad_forget[idx_param]) >= torch.quantile(torch.abs(grad_forget[idx_param]), args.quantile))
+            signal_noise_forget = grad_forget[idx_param] / (VF[idx_param] + 1e-8).sqrt()
+            signal_noise_retain = param.grad / (VR[idx_param] + 1e-8).sqrt()
 
-            # # imbriqué
-            # mask_grad = mask * mask_grads[idx_param]
-            # mask_grads[idx_param] = mask_grad
+            cdf_forget = normal_dist.cdf(signal_noise_forget)
+            cdf_retain = normal_dist.cdf(signal_noise_retain)
 
-            # update grad
-            param.grad = mask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
-
-            # print("Ratio of masked parameters : ", mask_grad.sum() / mask.numel())
+            vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
+            
+            param.grad = vmask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
 
         optimizer.step()
 
@@ -139,6 +127,7 @@ def SalGrad(data_loaders, model, criterion, optimizer, epoch, args):
             )
             start = time.time()
 
+    
     mlflow.log_metric("RTE", time.time() - start)
 
     for name, loader in data_loaders.items():
@@ -163,4 +152,4 @@ def SalGrad(data_loaders, model, criterion, optimizer, epoch, args):
     mlflow.end_run()
     print("retain_accuracy {top1.avg:.3f}".format(top1=top1))
 
-    return top1.avg
+    return top1.avg, VF, VR

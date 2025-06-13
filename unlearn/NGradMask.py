@@ -16,15 +16,8 @@ import evaluation
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
 
 @iterative_unlearn
-def EspGrad(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
-    """
-    VarGrad unlearning method.
+def NGradMask(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
     
-    We compute the different gradients (according to NegGradPlus) of the losses with respect to the model parameters.
-    We estimate the variance of the gradients of the parameters.
-    We put a probabilistic threshold so that we mask the parameters that are unsure to be updated.
-
-    """
     rho = 0.9 # momentum for the variance estimation
     
     mlflow.start_run()
@@ -43,7 +36,7 @@ def EspGrad(data_loaders, model, criterion, optimizer, epoch, args, VF = None, V
     mlflow.log_param("dataset", args.dataset)
 
     forget_loader = data_loaders["forget"]
-    retain_loader = data_loaders["retain"]
+    retain_loader = torch.utils.data.DataLoader(data_loaders["retain"].dataset, batch_size = args.batch_size, shuffle=True)
     retain_loader_iter = enumerate(retain_loader)
 
     losses = utils.AverageMeter()
@@ -112,7 +105,7 @@ def EspGrad(data_loaders, model, criterion, optimizer, epoch, args, VF = None, V
 
             # quantiles mask
             vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
-            # mask = (vmask >= args.quantile)
+            mask = (vmask >= args.quantile)
 
             # # imbriqué
             # mask_grad = mask * mask_grads[idx_param]
@@ -122,7 +115,7 @@ def EspGrad(data_loaders, model, criterion, optimizer, epoch, args, VF = None, V
             # torch.save(vmask, f"{args.save_dir}/vmask/vmask_{idx_param}_{epoch}.pt")
 
             # update grad
-            param.grad = vmask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
+            param.grad = mask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
 
             # print("Ratio of masked parameters : ", mask_grad.sum() / mask.numel())
 

@@ -28,7 +28,9 @@ def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
     mlflow.log_param("dataset", args.dataset)
 
     forget_loader = data_loaders["forget"]
-    retain_loader = data_loaders["retain"]
+    retain_loader = torch.utils.data.DataLoader(data_loaders["retain"].dataset, batch_size = args.batch_size, shuffle=True)
+    retain_loader_iter = iter(retain_loader)
+    
     retain_loader_iter = enumerate(retain_loader)
 
     losses = utils.AverageMeter()
@@ -70,7 +72,7 @@ def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
                 grads.append(param.grad)
 
             # compute loss and grad on the retain
-            _, data = next(retain_loader_iter)
+            data = next(retain_loader_iter)
             image, target = get_x_y_from_data_dict(data, device)
 
             output_clean = model(image)
@@ -129,7 +131,7 @@ def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
                 grads.append(param.grad)
 
             # compute loss and grad on the retain
-            _, data = next(retain_loader_iter)
+            data = next(retain_loader_iter)
             image, target = data[0].to(device), data[1].to(device)
 
             output_clean = model(image)

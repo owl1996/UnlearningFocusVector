@@ -46,6 +46,8 @@ def FT_iter(data_loaders, model, criterion, optimizer, epoch, args, with_l1=Fals
     mlflow.log_param("dataset", args.dataset)
 
     train_loader = data_loaders["retain"]
+    retain_loader = torch.utils.data.DataLoader(data_loaders["retain"].dataset, batch_size = args.batch_size, shuffle=True)
+    retain_loader_iter = iter(retain_loader)
     forget_loader = data_loaders["forget"]
 
     losses = utils.AverageMeter()
@@ -100,14 +102,14 @@ def FT_iter(data_loaders, model, criterion, optimizer, epoch, args, with_l1=Fals
                 )
                 start = time.time()
     else:
-        for i, (image, target) in enumerate(train_loader):
+        for i, (image, target) in enumerate(forget_loader):
             if epoch < args.warmup:
                 utils.warmup_lr(
                     epoch, i + 1, optimizer, one_epoch_step=len(train_loader), args=args
                 )
 
-            image = image.to(device)
-            target = target.to(device)
+            data = next(retain_loader_iter)
+            image, target = data[0].to(device), data[1].to(device)
             
             # compute output
             output_clean = model(image)

@@ -31,7 +31,7 @@ def SalUn(data_loaders, model, criterion, optimizer, epoch, args):
     beta = args.beta
 
     forget_loader = data_loaders["forget"]
-    retain_loader = data_loaders["retain"]
+    retain_loader = torch.utils.data.DataLoader(data_loaders["retain"].dataset, batch_size = args.batch_size, shuffle=True)
     retain_loader_iter = enumerate(retain_loader)
 
     losses = utils.AverageMeter()
