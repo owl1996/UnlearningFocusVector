@@ -112,7 +112,7 @@ def _iterative_unlearn_impl(unlearn_iter_func):
                     epoch, optimizer.state_dict()["param_groups"][0]["lr"]
                 )
             )
-            if args.unlearn in ["VarGrad", "EspGrad"]:
+            if args.unlearn in ["NGradFocus", "NGradMask", "SRGradFocus", "SRGradMask"]:
                 train_acc, VF, VR = unlearn_iter_func(
                     data_loaders, model, criterion, optimizer, epoch, args, VF, VR
                 )
