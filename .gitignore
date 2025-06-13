@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.ipynb
+**/*.ipynb
 
 # C extensions
 *.so
@@ -187,4 +189,3 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-parse_results_notebook.ipynb
