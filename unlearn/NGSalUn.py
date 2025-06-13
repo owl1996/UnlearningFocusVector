@@ -2,7 +2,7 @@ import sys
 import time
 import torch
 import utils
-import vutils
+
 from .impl import iterative_unlearn
 
 import mlflow
