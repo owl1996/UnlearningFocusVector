@@ -75,7 +75,7 @@ def NGradMask(data_loaders, model, criterion, optimizer, epoch, args, VF = None,
 
         # Compute the moving average of the gradients forget
         if VF is None :
-            VF = [grad * grad for grad in grad_forget]
+            VF = [(1 - rho) * grad * grad for grad in grad_forget]
         else :
             VF = [rho * grad * grad + (1 - rho) * prev_grad for grad, prev_grad in zip(grad_forget, VF)]
 
@@ -90,7 +90,7 @@ def NGradMask(data_loaders, model, criterion, optimizer, epoch, args, VF = None,
         loss.backward()
 
         if VR is None:
-            VR = [param.grad * param.grad for param in model.parameters()]
+            VR = [(1 - rho) * param.grad * param.grad for param in model.parameters()]
         else:
             VR = [rho * param.grad * param.grad + (1 - rho) * prev_grad for param, prev_grad in zip(model.parameters(), VR)]
 
