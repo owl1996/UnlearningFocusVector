@@ -7,7 +7,7 @@ from .impl import iterative_unlearn
 sys.path.append(".")
 from imagenet import get_x_y_from_data_dict
 
-import mlflow
+import mlflow # type: ignore
 from trainer import validate
 import evaluation
 
