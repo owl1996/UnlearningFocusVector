@@ -34,6 +34,7 @@ def relativeUA(model, loader, args, device):
             # print("ideal_predicted: ", ideal_predicted)
             # print("targets: ", targets)
             correct += (predicted == ideal_predicted).sum().item()
+            
             correct_predicted += (predicted == targets).sum().item()
             correct_ideal_predicted += (ideal_predicted == targets).sum().item()
 

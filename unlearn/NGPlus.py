@@ -180,7 +180,7 @@ def NGPlus(data_loaders, model, criterion, optimizer, epoch, args):
     for key, val in eval.items():
         mlflow.log_metric("MIA_" + key, val)
 
-    result = evaluation.relativeUA(model, data_loaders["test"], args, device)
+    result = evaluation.relativeUA(model, data_loaders["forget"], args, device)
     mlflow.log_metric("relativeUA", result["rUA"])
     mlflow.log_metric("Fid", result["Fid"])
 

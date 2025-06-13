@@ -153,7 +153,7 @@ def FT_iter(data_loaders, model, criterion, optimizer, epoch, args, with_l1=Fals
     for key, val in eval.items():
         mlflow.log_metric("MIA_" + key, val)
 
-    result = evaluation.relativeUA(model, data_loaders["test"], args, device)
+    result = evaluation.relativeUA(model, data_loaders["forget"], args, device)
     mlflow.log_metric("relativeUA", result["rUA"])
     mlflow.log_metric("Fid", result["Fid"])
 
