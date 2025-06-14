@@ -101,7 +101,7 @@ def _iterative_unlearn_impl(unlearn_iter_func):
                     data_loaders, model, criterion, optimizer, epoch, args, VF, VR
                 )
             else:
-                unlearn_iter_func(
+                _ = unlearn_iter_func(
                     data_loaders, model, criterion, optimizer, epoch, args
                 )
                 scheduler.step()

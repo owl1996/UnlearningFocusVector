@@ -136,6 +136,7 @@ def main():
     print("retain dataset classes: ", set(retain_dataset.targets.tolist()))
 
     criterion = nn.CrossEntropyLoss()
+    
 
     evaluation_result = None
 

@@ -10,7 +10,7 @@ import torch.utils.data
 import arg_parser
 import evaluation
 import utils
-from trainer import validate
+from trainer import validate, train
 from time import time
 import mlflow
 import unlearn
@@ -132,14 +132,36 @@ def main():
                 train_loader_full.dataset
             )
 
-    unlearn_data_loaders = OrderedDict(
-        retain=retain_loader, forget=forget_loader, val=val_loader, test=test_loader
-    )
+    # unlearn_data_loaders = OrderedDict(
+    #     retain=retain_loader, forget=forget_loader, val=val_loader, test=test_loader
+    # )
     
     criterion = nn.CrossEntropyLoss()
-    
-    unlearn_method = unlearn.get_unlearn_method("ideal")
-    unlearn_method(unlearn_data_loaders, model, criterion, args)
+    decreasing_lr = list(map(int, args.decreasing_lr.split(",")))
+
+    optimizer = torch.optim.SGD(
+        model.parameters(),
+        args.lr,
+        momentum=args.momentum,
+        weight_decay=args.weight_decay,
+    )
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(
+        optimizer, milestones=decreasing_lr, gamma=0.1
+    )  # 0.1 is fixed
+
+    for epoch in range(args.epochs):
+        # start_time = time.time()
+        print(optimizer.state_dict()["param_groups"][0]["lr"])
+        acc = train(retain_loader, model, criterion, optimizer, epoch, args)
+
+        # evaluate on validation set
+        tacc = validate(val_loader, model, criterion, args)
+        print(f"Epoch {epoch} - Train Accuracy: {acc:.4f}, Validation Accuracy: {tacc:.4f}")
+        # evaluate on test set
+        test_tacc = validate(test_loader, model, criterion, args)
+        print(f"Epoch {epoch} - Test Accuracy: {test_tacc:.4f}")
+
+        scheduler.step()
 
     unlearn.save_unlearn_checkpoint(model, None, args)
     torch.save(

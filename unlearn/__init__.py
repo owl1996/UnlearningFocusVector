@@ -1,6 +1,5 @@
 from .impl import load_unlearn_checkpoint, save_unlearn_checkpoint
 
-from .ideal import ideal
 from .retrain import retrain
 from .FT import FT
 
@@ -21,9 +20,7 @@ def get_unlearn_method(name):
     """method usage:
 
     function(data_loaders, model, criterion, args)"""
-    if name == "ideal":
-        return ideal
-    elif name == "retrain":
+    if name == "retrain":
         return retrain
     elif name == "FT":
         return FT
