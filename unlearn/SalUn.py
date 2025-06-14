@@ -1,6 +1,6 @@
 import sys
 import time
-import torch
+import torch # type: ignore
 import utils
 from .impl import iterative_unlearn
 

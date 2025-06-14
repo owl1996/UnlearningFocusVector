@@ -23,7 +23,7 @@ dataset = ["cifar10"]
 
 unlearn = ["NGPlus", "NGradMask", "NGSalUn", "NGradFocus", "SalUn", "SRL", "SRGradFocus", "SRGradMask"]
 unlearn_epochs = ["30"]
-archs = ["resnet18"]
+archs = ["VGG16"]
 seeds = ["1", "2", "3"]
 quantiles = ["0.3", "0.5"]
 class_to_replace = [-1, 0]
