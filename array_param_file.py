@@ -4,7 +4,7 @@ baseline_train_epochs = {
     "cifar10": 100,
     "cifar100": 150,
     "tiny-imagenet": 1,
-    "svhn": 200,
+    "svhn": 100,
     "imagenet": 90,
     "imagenet100": 90
 }
@@ -15,11 +15,14 @@ nums_index_to_replace = {
                 },
     "cifar100": {-1 : [2250, 4500, 22500],
                  0 : [45, 225, 350]
+                },
+    "svhn": {-1 : [2250, 4500, 22500],
+                0 : [450, 1900, 3500]
                 }
 }
 
 base_script = "-u mlflow_forget.py"
-dataset = ["cifar10"]
+dataset = ["svhn"]
 
 # unlearn = ["NGPlus", "NGradMask", "NGSalUn", "NGradFocus", "SalUn", "SRL", "SRGradFocus", "SRGradMask"]
 unlearn = ["SalUn", "SRL", "SRGradFocus", "SRGradMask", "SRGradFocusEnsure"]
