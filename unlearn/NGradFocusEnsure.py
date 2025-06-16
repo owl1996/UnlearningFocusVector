@@ -2,21 +2,23 @@ import sys
 import time
 import torch
 import utils
+
 from .impl import iterative_unlearn
 
 import mlflow # type: ignore
-from trainer import validate
-import evaluation
 
+from trainer import validate
 
 sys.path.append(".")
+import evaluation
 
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
 
 @iterative_unlearn
-def SRGradMask(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
-    rho = 0.9  # momentum for the variance estimation
-
+def NGradFocusEnsure(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
+    """NGradFocus unlearning method."""
+    rho = 0.9 # momentum for the variance estimation
+    
     mlflow.start_run()
     mlflow.log_param("seed", args.seed)
     mlflow.log_param("save_dir", args.save_dir)
@@ -47,27 +49,24 @@ def SRGradMask(data_loaders, model, criterion, optimizer, epoch, args, VF = None
     else:
         device = torch.device("cpu")
 
-    # switch to train mode
-    # num_classes = list(model.children())[-1].out_features
-    num_classes = 10
+    # mask_grads = [torch.ones_like(param) for param in model.parameters()]
+
+    start = time.time()
     model.train()
 
-    start = time.time()    
     for i, (image, target) in enumerate(forget_loader):
-        if epoch < args.warmup:
-            utils.warmup_lr(
-                epoch, i + 1, optimizer, one_epoch_step=len(forget_loader), args=args
-            )
-
+        # NegGrad : Montée de Gradient sur le forget
         image = image.to(device)
         target = target.to(device)
-        
+
+        if epoch < args.warmup:
+                utils.warmup_lr(
+                    epoch, i + 1, optimizer, one_epoch_step=len(forget_loader), args=args
+                )
+
         model.zero_grad()
 
-        # compute output
-        output = model(image)
-        target = (target + torch.randint(1, num_classes, target.shape, device=device)) % num_classes
-        loss = criterion(output, target)
+        loss = - criterion(model(image), target)
         optimizer.zero_grad()
         loss.backward()
 
@@ -76,16 +75,15 @@ def SRGradMask(data_loaders, model, criterion, optimizer, epoch, args, VF = None
         # Compute the moving average of the gradients forget
         if VF is None :
             VF = [(1 - rho) * grad * grad for grad in grad_forget]
-            print("VF is None, initializing")
         else :
             VF = [rho * grad * grad + (1 - rho) * prev_grad for grad, prev_grad in zip(grad_forget, VF)]
 
-        # compute loss and grad on the retain
+        # Plus : Descente sur le retain
         _, data = next(retain_loader_iter)
         image, target = data[0].to(device), data[1].to(device)
 
+        model.zero_grad()
         output_clean = model(image)
-
         loss = criterion(output_clean, target)
         optimizer.zero_grad()
         loss.backward()
@@ -95,6 +93,7 @@ def SRGradMask(data_loaders, model, criterion, optimizer, epoch, args, VF = None
         else:
             VR = [rho * param.grad * param.grad + (1 - rho) * prev_grad for param, prev_grad in zip(model.parameters(), VR)]
 
+        # Compute the mask
         for idx_param, param in enumerate(model.parameters()):
 
             signal_noise_forget = grad_forget[idx_param] / (VF[idx_param] + 1e-8).sqrt()
@@ -103,10 +102,43 @@ def SRGradMask(data_loaders, model, criterion, optimizer, epoch, args, VF = None
             cdf_forget = normal_dist.cdf(signal_noise_forget)
             cdf_retain = normal_dist.cdf(signal_noise_retain)
 
+            # quantiles mask
             vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
-            mask = (vmask >= args.quantile)
-            
-            param.grad = mask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
+            # mask = (vmask >= args.quantile)
+
+            # Compute product of grads
+            product_grad = vmask * param.grad * grad_forget[idx_param]
+            product_grad = product_grad.view(-1)
+            # Scalar product of grads
+            scalar_grad = torch.sum(product_grad)
+            # Order the values of product_grad
+            # and find the most negative terms that make scalar_grad negative
+            # Si déjà >= 0, pas besoin de masking
+            mask_most_neg = torch.ones_like(product_grad)
+            if scalar_grad >= 0:
+                # print(scalar_grad)
+                continue
+            else:
+                sorted_vals, sorted_indices = torch.sort(product_grad)
+
+                cumulative_removed = torch.cumsum(sorted_vals, dim=0)
+
+                running_scalar = scalar_grad - cumulative_removed
+
+                stop_index = torch.nonzero(running_scalar >= 0, as_tuple=False)
+                if len(stop_index) == 0:
+                    cutoff = len(sorted_vals)
+                else:
+                    cutoff = stop_index[0].item() + 1
+
+                mask_most_neg[sorted_indices[:cutoff]] = 0
+
+            mask_most_neg = mask_most_neg.view_as(param.grad)
+
+            # update grad
+            param.grad = vmask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
+
+            # print("Ratio of masked parameters : ", mask_grad.sum() / mask.numel())
 
         optimizer.step()
 
@@ -129,7 +161,6 @@ def SRGradMask(data_loaders, model, criterion, optimizer, epoch, args, VF = None
             )
             start = time.time()
 
-    
     mlflow.log_metric("RTE", time.time() - start)
 
     for name, loader in data_loaders.items():

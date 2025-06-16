@@ -21,7 +21,8 @@ nums_index_to_replace = {
 base_script = "-u mlflow_forget.py"
 dataset = ["cifar10"]
 
-unlearn = ["NGPlus", "NGradMask", "NGSalUn", "NGradFocus", "SalUn", "SRL", "SRGradFocus", "SRGradMask"]
+# unlearn = ["NGPlus", "NGradMask", "NGSalUn", "NGradFocus", "SalUn", "SRL", "SRGradFocus", "SRGradMask"]
+unlearn = ["SalUn", "SRL", "SRGradFocus", "SRGradMask", "SRGradFocusEnsure"]
 unlearn_epochs = ["30"]
 archs = ["vgg16_bn"]
 seeds = ["1", "2", "3"]

@@ -48,7 +48,8 @@ def SRGradFocus(data_loaders, model, criterion, optimizer, epoch, args, VF = Non
         device = torch.device("cpu")
 
     # switch to train mode
-    num_classes = list(model.children())[-1].out_features
+    # num_classes = list(model.children())[-1].out_features
+    num_classes = 10
     model.train()
 
     start = time.time()    

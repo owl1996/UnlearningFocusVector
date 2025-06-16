@@ -14,7 +14,7 @@ sys.path.append(".")
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
 
 @iterative_unlearn
-def SRGradMask(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
+def SRGradFocusEnsure(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
     rho = 0.9  # momentum for the variance estimation
 
     mlflow.start_run()
@@ -34,7 +34,7 @@ def SRGradMask(data_loaders, model, criterion, optimizer, epoch, args, VF = None
 
     forget_loader = data_loaders["forget"]
     retain_loader = torch.utils.data.DataLoader(data_loaders["retain"].dataset, batch_size = args.batch_size, shuffle=True)
-    retain_loader_iter = enumerate(retain_loader)
+    retain_loader_iter = iter(retain_loader)
 
     losses = utils.AverageMeter()
     top1 = utils.AverageMeter()
@@ -76,12 +76,11 @@ def SRGradMask(data_loaders, model, criterion, optimizer, epoch, args, VF = None
         # Compute the moving average of the gradients forget
         if VF is None :
             VF = [(1 - rho) * grad * grad for grad in grad_forget]
-            print("VF is None, initializing")
         else :
             VF = [rho * grad * grad + (1 - rho) * prev_grad for grad, prev_grad in zip(grad_forget, VF)]
 
         # compute loss and grad on the retain
-        _, data = next(retain_loader_iter)
+        data = next(retain_loader_iter)
         image, target = data[0].to(device), data[1].to(device)
 
         output_clean = model(image)
@@ -104,9 +103,37 @@ def SRGradMask(data_loaders, model, criterion, optimizer, epoch, args, VF = None
             cdf_retain = normal_dist.cdf(signal_noise_retain)
 
             vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
-            mask = (vmask >= args.quantile)
+
+            # Compute product of grads
+            product_grad = vmask * param.grad * grad_forget[idx_param]
+            product_grad = product_grad.view(-1)
+            # Scalar product of grads
+            scalar_grad = torch.sum(product_grad)
+            # Order the values of product_grad
+            # and find the most negative terms that make scalar_grad negative
+            # Si déjà >= 0, pas besoin de masking
+            mask_most_neg = torch.ones_like(product_grad)
+            if scalar_grad >= 0:
+                # print(scalar_grad)
+                continue
+            else:
+                sorted_vals, sorted_indices = torch.sort(product_grad)
+
+                cumulative_removed = torch.cumsum(sorted_vals, dim=0)
+
+                running_scalar = scalar_grad - cumulative_removed
+
+                stop_index = torch.nonzero(running_scalar >= 0, as_tuple=False)
+                if len(stop_index) == 0:
+                    cutoff = len(sorted_vals)
+                else:
+                    cutoff = stop_index[0].item() + 1
+
+                mask_most_neg[sorted_indices[:cutoff]] = 0
+
+            mask_most_neg = mask_most_neg.view_as(param.grad)
             
-            param.grad = mask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
+            param.grad = mask_most_neg * vmask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
 
         optimizer.step()
 

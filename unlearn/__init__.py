@@ -15,6 +15,8 @@ from .SRL import SRL
 from .SRGradFocus import SRGradFocus
 from .SRGradMask import SRGradMask
 from .SalUn import SalUn
+from .SRGradFocusEnsure import SRGradFocusEnsure
+from .NGradFocusEnsure import NGradFocusEnsure
 
 def get_unlearn_method(name):
     """method usage:
@@ -49,6 +51,11 @@ def get_unlearn_method(name):
         return SRGradMask
     elif name == "SalUn":
         return SalUn
+    
+    elif name == "SRGradFocusEnsure":
+        return SRGradFocusEnsure
+    elif name == "NGradFocusEnsure":
+        return NGradFocusEnsure
     
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")
