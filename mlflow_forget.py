@@ -131,9 +131,9 @@ def main():
     print("val size :", len(unlearn_data_loaders["val"].dataset))
     print("test size :", len(unlearn_data_loaders["test"].dataset))
 
-    # print the classes in forget dataset
-    print("forget dataset classes: ", set(forget_dataset.targets.tolist()))
-    print("retain dataset classes: ", set(retain_dataset.targets.tolist()))
+    # # print the classes in forget dataset
+    # print("forget dataset classes: ", set(forget_dataset.targets.tolist()))
+    # print("retain dataset classes: ", set(retain_dataset.targets.tolist()))
 
     criterion = nn.CrossEntropyLoss()
     

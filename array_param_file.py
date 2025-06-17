@@ -24,10 +24,12 @@ nums_index_to_replace = {
 base_script = "-u mlflow_forget.py"
 dataset = ["svhn"]
 
-# unlearn = ["NGPlus", "NGradMask", "NGSalUn", "NGradFocus", "SalUn", "SRL", "SRGradFocus", "SRGradMask"]
-unlearn = ["SalUn", "SRL", "SRGradFocus", "SRGradMask", "SRGradFocusEnsure"]
+unlearn = [
+    # "NGPlus", "NGradMask", "NGSalUn", "NGradFocus", "NGradFocusSecure"
+    # FT, MSG, CT
+    "SalUn", "SRL", "SRGradFocus", "SRGradMask", "SRGradFocusEnsure"]
 unlearn_epochs = ["30"]
-archs = ["vgg16_bn"]
+archs = ["resnet18"]
 seeds = ["1", "2", "3"]
 quantiles = ["0.3", "0.5"]
 class_to_replace = [-1, 0]

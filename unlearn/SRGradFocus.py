@@ -34,7 +34,7 @@ def SRGradFocus(data_loaders, model, criterion, optimizer, epoch, args, VF = Non
 
     forget_loader = data_loaders["forget"]
     retain_loader = torch.utils.data.DataLoader(data_loaders["retain"].dataset, batch_size = args.batch_size, shuffle=True)
-    retain_loader_iter = iter(retain_loader)
+    retain_loader_iter = enumerate(retain_loader)
 
     losses = utils.AverageMeter()
     top1 = utils.AverageMeter()
@@ -80,7 +80,7 @@ def SRGradFocus(data_loaders, model, criterion, optimizer, epoch, args, VF = Non
             VF = [rho * grad * grad + (1 - rho) * prev_grad for grad, prev_grad in zip(grad_forget, VF)]
 
         # compute loss and grad on the retain
-        data = next(retain_loader_iter)
+        _, data = next(retain_loader_iter)
         image, target = data[0].to(device), data[1].to(device)
 
         output_clean = model(image)

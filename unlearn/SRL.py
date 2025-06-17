@@ -4,7 +4,7 @@ import torch
 import utils
 from .impl import iterative_unlearn
 
-import mlflow
+import mlflow # type: ignore
 from trainer import validate
 import evaluation
 

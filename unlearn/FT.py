@@ -28,8 +28,8 @@ def l2_regularization(model):
         params_vec.append(param.view(-1))
     return torch.linalg.norm(torch.cat(params_vec), ord=2)
 
-
-def FT_iter(data_loaders, model, criterion, optimizer, epoch, args, with_l1=False):
+@iterative_unlearn
+def FT(data_loaders, model, criterion, optimizer, epoch, args, with_l1=False):
     mlflow.start_run()
     mlflow.log_param("seed", args.seed)
     mlflow.log_param("save_dir", args.save_dir)
@@ -47,7 +47,7 @@ def FT_iter(data_loaders, model, criterion, optimizer, epoch, args, with_l1=Fals
 
     train_loader = data_loaders["retain"]
     retain_loader = torch.utils.data.DataLoader(data_loaders["retain"].dataset, batch_size = args.batch_size, shuffle=True)
-    retain_loader_iter = iter(retain_loader)
+    retain_loader_iter = enumerate(retain_loader)
     forget_loader = data_loaders["forget"]
 
     losses = utils.AverageMeter()
@@ -65,78 +65,42 @@ def FT_iter(data_loaders, model, criterion, optimizer, epoch, args, with_l1=Fals
         device = torch.device("cpu")
 
     start = time.time()
-    if args.imagenet_arch:
 
-        for i, data in enumerate(train_loader):
-            image, target = get_x_y_from_data_dict(data, device)
-            if epoch < args.warmup:
-                utils.warmup_lr(
-                    epoch, i + 1, optimizer, one_epoch_step=len(train_loader), args=args
+    for i, (image, target) in enumerate(forget_loader):
+        if epoch < args.warmup:
+            utils.warmup_lr(
+                epoch, i + 1, optimizer, one_epoch_step=len(train_loader), args=args
+            )
+
+        _, data = next(retain_loader_iter)
+        image, target = data[0].to(device), data[1].to(device)
+        
+        # compute output
+        output_clean = model(image)
+        loss = criterion(output_clean, target)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        output = output_clean.float()
+        loss = loss.float()
+        # measure accuracy and record loss
+        prec1 = utils.accuracy(output.data, target)[0]
+        losses.update(loss.item(), image.size(0))
+        top1.update(prec1.item(), image.size(0))
+
+        if (i + 1) % args.print_freq == 0:
+            end = time.time()
+            print(
+                "Epoch: [{0}][{1}/{2}]\t"
+                "Loss {loss.val:.4f} ({loss.avg:.4f})\t"
+                "Accuracy {top1.val:.3f} ({top1.avg:.3f})\t"
+                "Time {3:.2f}".format(
+                    epoch, i, len(train_loader), end - start, loss=losses, top1=top1
                 )
-
-            # compute output
-            output_clean = model(image)
-
-            loss = criterion(output_clean, target)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            output = output_clean.float()
-            loss = loss.float()
-            # measure accuracy and record loss
-            prec1 = utils.accuracy(output.data, target)[0]
-            losses.update(loss.item(), image.size(0))
-            top1.update(prec1.item(), image.size(0))
-
-            if (i + 1) % args.print_freq == 0:
-                end = time.time()
-                print(
-                    "Epoch: [{0}][{1}/{2}]\t"
-                    "Loss {loss.val:.4f} ({loss.avg:.4f})\t"
-                    "Accuracy {top1.val:.3f} ({top1.avg:.3f})\t"
-                    "Time {3:.2f}".format(
-                        epoch, i, len(train_loader), end - start, loss=losses, top1=top1
-                    )
-                )
-                start = time.time()
-    else:
-        for i, (image, target) in enumerate(forget_loader):
-            if epoch < args.warmup:
-                utils.warmup_lr(
-                    epoch, i + 1, optimizer, one_epoch_step=len(train_loader), args=args
-                )
-
-            data = next(retain_loader_iter)
-            image, target = data[0].to(device), data[1].to(device)
-            
-            # compute output
-            output_clean = model(image)
-            loss = criterion(output_clean, target)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            output = output_clean.float()
-            loss = loss.float()
-            # measure accuracy and record loss
-            prec1 = utils.accuracy(output.data, target)[0]
-            losses.update(loss.item(), image.size(0))
-            top1.update(prec1.item(), image.size(0))
-
-            if (i + 1) % args.print_freq == 0:
-                end = time.time()
-                print(
-                    "Epoch: [{0}][{1}/{2}]\t"
-                    "Loss {loss.val:.4f} ({loss.avg:.4f})\t"
-                    "Accuracy {top1.val:.3f} ({top1.avg:.3f})\t"
-                    "Time {3:.2f}".format(
-                        epoch, i, len(train_loader), end - start, loss=losses, top1=top1
-                    )
-                )
-                start = time.time()
+            )
+            start = time.time()
 
     mlflow.log_metric("RTE", time.time() - start)
 
@@ -163,11 +127,6 @@ def FT_iter(data_loaders, model, criterion, optimizer, epoch, args, with_l1=Fals
     print("retain_accuracy {top1.avg:.3f}".format(top1=top1))
 
     return top1.avg
-
-
-@iterative_unlearn
-def FT(data_loaders, model, criterion, optimizer, epoch, args):
-    return FT_iter(data_loaders, model, criterion, optimizer, epoch, args)
 
 
 @iterative_unlearn

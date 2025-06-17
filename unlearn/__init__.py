@@ -1,4 +1,4 @@
-from .impl import load_unlearn_checkpoint, save_unlearn_checkpoint
+from .impl import load_unlearn_checkpoint, save_unlearn_checkpoint  # noqa: F401
 
 from .retrain import retrain
 from .FT import FT
@@ -17,6 +17,8 @@ from .SRGradMask import SRGradMask
 from .SalUn import SalUn
 from .SRGradFocusEnsure import SRGradFocusEnsure
 from .NGradFocusEnsure import NGradFocusEnsure
+
+from .MSG import MSG
 
 def get_unlearn_method(name):
     """method usage:
@@ -56,6 +58,9 @@ def get_unlearn_method(name):
         return SRGradFocusEnsure
     elif name == "NGradFocusEnsure":
         return NGradFocusEnsure
+    
+    elif name == "MSG":
+        return MSG
     
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")
