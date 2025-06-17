@@ -25,7 +25,7 @@ base_script = "-u mlflow_forget.py"
 dataset = ["cifar10"]
 
 unlearn = [
-    "NGPlus", "NGradMask", "NGSalUn", "NGradFocus", "NGradFocusSecure"
+    "NGPlus", "NGradMask", "NGSalUn", "NGradFocus", "NGradFocusSecure",
     "FT", "MSG", 
     "CT",
     # "SalUn", "SRL", "SRGradFocus", "SRGradMask", 
