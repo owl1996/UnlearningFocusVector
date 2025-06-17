@@ -103,15 +103,15 @@ def SRGradFocusEnsure(data_loaders, model, criterion, optimizer, epoch, args, VF
             cdf_retain = normal_dist.cdf(signal_noise_retain)
 
             vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
+            
+            # combination = vmask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param]) * param.grad
+            combination = vmask * param.grad * grad_forget[idx_param]
 
-            # Compute product of grads
-            product_grad = vmask * param.grad * grad_forget[idx_param]
+            product_grad = combination * param.grad
             product_grad = product_grad.view(-1)
             # Scalar product of grads
             scalar_grad = torch.sum(product_grad)
-            # Order the values of product_grad
-            # and find the most negative terms that make scalar_grad negative
-            # Si déjà >= 0, pas besoin de masking
+            # Compute mask
             mask_most_neg = torch.ones_like(product_grad)
             if scalar_grad >= 0:
                 # print(scalar_grad)
@@ -132,6 +132,8 @@ def SRGradFocusEnsure(data_loaders, model, criterion, optimizer, epoch, args, VF
                 mask_most_neg[sorted_indices[:cutoff]] = 0
 
             mask_most_neg = mask_most_neg.view_as(param.grad)
+
+            # print(vmask.sum()/mask_most_neg.numel())
             
             param.grad = mask_most_neg * vmask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
 
