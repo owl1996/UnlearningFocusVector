@@ -19,6 +19,7 @@ from .SRGradFocusEnsure import SRGradFocusEnsure
 from .NGradFocusEnsure import NGradFocusEnsure
 
 from .MSG import MSG
+from .CT import CT
 
 def get_unlearn_method(name):
     """method usage:
@@ -61,6 +62,8 @@ def get_unlearn_method(name):
     
     elif name == "MSG":
         return MSG
+    elif name == "CT":
+        return CT
     
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")
