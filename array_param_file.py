@@ -27,7 +27,7 @@ dataset = ["cifar10"]
 unlearn = [
     "NGPlus", "NGradMask", "NGSalUn", "NGradFocus", "NGradFocusSecure"
     "FT", "MSG", 
-    "CT"
+    "CT",
     # "SalUn", "SRL", "SRGradFocus", "SRGradMask", 
     "SRGradFocusEnsure"
     ]
