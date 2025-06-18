@@ -33,7 +33,7 @@ unlearn = [
     "SRGradFocusOPT"
     ]
 unlearn_epochs = ["30"]
-archs = ["vgg16_bn, resnet18"]
+archs = ["vgg16_bn", "resnet18"]
 seeds = ["1","2","3"]
 quantiles = ["0.3", "0.5"]
 class_to_replace = [-1, 0]
