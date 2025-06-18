@@ -25,10 +25,11 @@ base_script = "-u mlflow_forget.py"
 dataset = ["cifar10", "svhn"]
 
 unlearn = [
-    # "NGPlus", "NGradMask", "NGSalUn", "NGradFocus", "NGradFocusSecure",
+    # "NGPlus", "NGradMask", "NGSalUn", "NGradFocus",
     # "FT", "MSG", 
     # "CT",
     # "SalUn", "SRL", "SRGradFocus", "SRGradMask", 
+    "NGradFocusOPT",
     "SRGradFocusOPT"
     ]
 unlearn_epochs = ["30"]
