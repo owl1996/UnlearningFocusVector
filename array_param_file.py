@@ -22,17 +22,17 @@ nums_index_to_replace = {
 }
 
 base_script = "-u mlflow_forget.py"
-dataset = ["cifar10"]
+dataset = ["cifar10", "svhn"]
 
 unlearn = [
-    "NGPlus", "NGradMask", "NGSalUn", "NGradFocus", "NGradFocusSecure",
-    "FT", "MSG", 
-    "CT",
+    # "NGPlus", "NGradMask", "NGSalUn", "NGradFocus", "NGradFocusSecure",
+    # "FT", "MSG", 
+    # "CT",
     # "SalUn", "SRL", "SRGradFocus", "SRGradMask", 
-    "SRGradFocusEnsure"
+    "SRGradFocusOPT"
     ]
 unlearn_epochs = ["30"]
-archs = ["vgg16_bn"]
+archs = ["vgg16_bn, resnet18"]
 seeds = ["1","2","3"]
 quantiles = ["0.3", "0.5"]
 class_to_replace = [-1, 0]

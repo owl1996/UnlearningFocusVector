@@ -14,7 +14,7 @@ sys.path.append(".")
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
 
 @iterative_unlearn
-def SRGradFocusEnsure(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
+def SRGradFocusOPT(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
     rho = 0.9  # momentum for the variance estimation
 
     mlflow.start_run()
@@ -103,38 +103,57 @@ def SRGradFocusEnsure(data_loaders, model, criterion, optimizer, epoch, args, VF
             cdf_retain = normal_dist.cdf(signal_noise_retain)
 
             vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
+
+            # Initialize variables
+            alpha = 1 - args.beta
+            beta = args.beta
+
+            grad_u = (vmask * grad_forget[idx_param]).view(-1)
+            grad_2u = grad_u * grad_u
+
+            grad_c = (vmask * param.grad).view(-1)
+            grad_2c = grad_c * grad_c
+            cross = grad_u * grad_c
             
-            # combination = vmask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param]) * param.grad
-            combination = vmask * param.grad * grad_forget[idx_param]
+            # Compute Optimal Mask
+            sorted_cross, sorted_indices_cross = torch.sort(cross)
 
-            product_grad = combination * param.grad
-            product_grad = product_grad.view(-1)
-            # Scalar product of grads
-            scalar_grad = torch.sum(product_grad)
-            # Compute mask
-            mask_most_neg = torch.ones_like(product_grad)
-            if scalar_grad >= 0:
-                # print(scalar_grad)
-                continue
+            sorted_u = grad_2u[sorted_indices_cross]
+            sorted_c = grad_2c[sorted_indices_cross]
+
+            cum_u = torch.cumsum(sorted_u, dim = 0)
+            cum_c = torch.cumsum(sorted_c, dim = 0)
+            cum_cross = torch.cumsum(sorted_cross, dim = 0)
+
+            sum_masked_cross = torch.sum(cross)
+            sum_masked_u = alpha / beta * (torch.sum(grad_2u))
+            sum_masked_c = beta / alpha * (torch.sum(grad_2c))
+
+            check_sum = torch.min(sum_masked_u, sum_masked_c) + sum_masked_cross
+
+            mask_most_neg = torch.ones_like(cross)
+            if check_sum >= 0:
+                stop_index = 0
             else:
-                sorted_vals, sorted_indices = torch.sort(product_grad)
+                sum_masked_cross = sum_masked_cross - cum_cross
+                sum_masked_u = sum_masked_u - alpha / beta * cum_u
+                sum_masked_c = sum_masked_c - beta / alpha * cum_c
 
-                cumulative_removed = torch.cumsum(sorted_vals, dim=0)
+                scalar = torch.min(sum_masked_u, sum_masked_c) + sum_masked_cross
 
-                running_scalar = scalar_grad - cumulative_removed
-
-                stop_index = torch.nonzero(running_scalar >= 0, as_tuple=False)
+                stop_index = torch.nonzero(scalar >= 0, as_tuple=False)
+                # print(stop_index)
                 if len(stop_index) == 0:
-                    cutoff = len(sorted_vals)
+                    cutoff = len(cross)
                 else:
                     cutoff = stop_index[0].item() + 1
 
-                mask_most_neg[sorted_indices[:cutoff]] = 0
+                mask_most_neg[sorted_indices_cross[:cutoff]] = 0
 
-            mask_most_neg = mask_most_neg.view_as(param.grad)
-
-            # print(vmask.sum()/mask_most_neg.numel())
+                print(torch.sum(mask_most_neg == 0) / mask_most_neg.numel())
             
+            # Compute and Mask new grad
+            mask_most_neg = mask_most_neg.view_as(param.grad)
             param.grad = mask_most_neg * vmask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
 
         optimizer.step()
@@ -177,10 +196,10 @@ def SRGradFocusEnsure(data_loaders, model, criterion, optimizer, epoch, args, VF
         mlflow.log_metric("MIA_" + key, val)
 
     result = evaluation.relativeUA(model, data_loaders["forget"], args, device)
+
     mlflow.log_metric("relativeUA", result["rUA"])
     mlflow.log_metric("Fid", result["Fid"])
-
     mlflow.end_run()
-    print("retain_accuracy {top1.avg:.3f}".format(top1=top1))
 
+    print("retain_accuracy {top1.avg:.3f}".format(top1=top1))
     return top1.avg, VF, VR

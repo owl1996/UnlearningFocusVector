@@ -15,8 +15,8 @@ from .SRL import SRL
 from .SRGradFocus import SRGradFocus
 from .SRGradMask import SRGradMask
 from .SalUn import SalUn
-from .SRGradFocusEnsure import SRGradFocusEnsure
-from .NGradFocusEnsure import NGradFocusEnsure
+from .SRGradFocusOPT import SRGradFocusOPT
+from .NGradFocusOPT import NGradFocusOPT
 
 from .MSG import MSG
 from .CT import CT
@@ -55,10 +55,10 @@ def get_unlearn_method(name):
     elif name == "SalUn":
         return SalUn
     
-    elif name == "SRGradFocusEnsure":
-        return SRGradFocusEnsure
-    elif name == "NGradFocusEnsure":
-        return NGradFocusEnsure
+    elif name == "SRGradFocusOPT":
+        return SRGradFocusOPT
+    elif name == "NGradFocusOPT":
+        return NGradFocusOPT
     
     elif name == "MSG":
         return MSG

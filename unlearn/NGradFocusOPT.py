@@ -15,7 +15,7 @@ import evaluation
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
 
 @iterative_unlearn
-def NGradFocusEnsure(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
+def NGradFocusOPT(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
     """NGradFocus unlearning method."""
     rho = 0.9 # momentum for the variance estimation
     
@@ -106,39 +106,57 @@ def NGradFocusEnsure(data_loaders, model, criterion, optimizer, epoch, args, VF 
             vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
             # mask = (vmask >= args.quantile)
 
-            # Compute product of grads
-            product_grad = vmask * param.grad * grad_forget[idx_param]
-            product_grad = product_grad.view(-1)
-            # Scalar product of grads
-            scalar_grad = torch.sum(product_grad)
-            # Order the values of product_grad
-            # and find the most negative terms that make scalar_grad negative
-            # Si déjà >= 0, pas besoin de masking
-            mask_most_neg = torch.ones_like(product_grad)
-            if scalar_grad >= 0:
-                # print(scalar_grad)
-                continue
+            # Initialize variables
+            alpha = 1 - args.beta
+            beta = args.beta
+
+            grad_u = (vmask * grad_forget[idx_param]).view(-1)
+            grad_2u = grad_u * grad_u
+
+            grad_c = (vmask * param.grad).view(-1)
+            grad_2c = grad_c * grad_c
+            cross = grad_u * grad_c
+            
+            # Compute Optimal Mask
+            sorted_cross, sorted_indices_cross = torch.sort(cross)
+
+            sorted_u = grad_2u[sorted_indices_cross]
+            sorted_c = grad_2c[sorted_indices_cross]
+
+            cum_u = torch.cumsum(sorted_u, dim = 0)
+            cum_c = torch.cumsum(sorted_c, dim = 0)
+            cum_cross = torch.cumsum(sorted_cross, dim = 0)
+
+            sum_masked_cross = torch.sum(cross)
+            sum_masked_u = alpha / beta * (torch.sum(grad_2u))
+            sum_masked_c = beta / alpha * (torch.sum(grad_2c))
+
+            check_sum = torch.min(sum_masked_u, sum_masked_c) + sum_masked_cross
+
+            mask_most_neg = torch.ones_like(cross)
+            if check_sum >= 0:
+                stop_index = 0
             else:
-                sorted_vals, sorted_indices = torch.sort(product_grad)
+                sum_masked_cross = sum_masked_cross - cum_cross
+                sum_masked_u = sum_masked_u - alpha / beta * cum_u
+                sum_masked_c = sum_masked_c - beta / alpha * cum_c
 
-                cumulative_removed = torch.cumsum(sorted_vals, dim=0)
+                scalar = torch.min(sum_masked_u, sum_masked_c) + sum_masked_cross
 
-                running_scalar = scalar_grad - cumulative_removed
-
-                stop_index = torch.nonzero(running_scalar >= 0, as_tuple=False)
+                stop_index = torch.nonzero(scalar >= 0, as_tuple=False)
+                # print(stop_index)
                 if len(stop_index) == 0:
-                    cutoff = len(sorted_vals)
+                    cutoff = len(cross)
                 else:
                     cutoff = stop_index[0].item() + 1
 
-                mask_most_neg[sorted_indices[:cutoff]] = 0
+                mask_most_neg[sorted_indices_cross[:cutoff]] = 0
 
+                # print(torch.sum(mask_most_neg == 0) / mask_most_neg.numel())
+            
+            # Compute and Mask new grad
             mask_most_neg = mask_most_neg.view_as(param.grad)
-
-            # update grad
-            param.grad = vmask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
-
-            # print("Ratio of masked parameters : ", mask_grad.sum() / mask.numel())
+            param.grad = mask_most_neg * vmask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
 
         optimizer.step()
 
