@@ -150,7 +150,7 @@ def SRGradFocusOPT(data_loaders, model, criterion, optimizer, epoch, args, VF = 
 
                 mask_most_neg[sorted_indices_cross[:cutoff]] = 0
 
-                print(torch.sum(mask_most_neg == 0) / mask_most_neg.numel())
+                # print(torch.sum(mask_most_neg == 0) / mask_most_neg.numel())
             
             # Compute and Mask new grad
             mask_most_neg = mask_most_neg.view_as(param.grad)
