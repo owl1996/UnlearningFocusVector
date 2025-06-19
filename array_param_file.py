@@ -30,11 +30,13 @@ unlearn = [
     # "CT",
     # "SalUn", "SRL", "SRGradFocus", "SRGradMask", 
     "NGradFocusOPT",
-    "SRGradFocusOPT"
+    # "SRGradFocusOPT",
+    "SRL_OPT",
+    "NGPlus_OPT"
     ]
 unlearn_epochs = ["30"]
 archs = ["vgg16_bn", "resnet18"]
-seeds = ["1","2","3"]
+seeds = ["1","2"]
 quantiles = ["0.3", "0.5"]
 class_to_replace = [-1, 0]
 

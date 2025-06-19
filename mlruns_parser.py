@@ -65,18 +65,22 @@ mpl.rcParams.update({
 
 # Dictionnaire des noms en LaTeX
 method_rename = {
-    "SRL": r"SRL",
-    "SalUn": r"SalUn",
-    "SRGradMask": r"SRL - GradMask",
-    "SRGradFocus": r"SRL - GradFocus",
-    "SRANDMask": r"SRL - ANDMask",
-    "NANDMask": r"NGPlus - ANDMask",
-    "NGPlus": r"NGPlus",
-    "NGradFocus": r"NGPlus - GradFocus",
-    "NGradMask": r"NGPlus - GradMask",
-    "NGSalUn": r"NGPlus - SalUn",
-    "SRGradFocusEnsure" : r"SRL - GradFocusSecure",
-    "NGGradFocusEnsure" : r"NGPlus - GradFocusSecure"
+    "SRL": "SRL",
+    "SalUn": "SalUn",
+    "SRGradMask": "SRL - GradMask",
+    "SRGradFocus": "SRL - GradFocus",
+    "SRANDMask": "SRL - ANDMask",
+    "NANDMask": "NGPlus - ANDMask",
+    "NGPlus": "NGPlus",
+    "NGradFocus": "NGPlus - GradFocus",
+    "NGradMask": "NGPlus - GradMask",
+    "NGSalUn": "NGPlus - SalUn",
+    "SRGradFocusEnsure" : "SRL - GradFocusSecure",
+    "NGGradFocusEnsure" : "NGPlus - GradFocusSecure",
+    "SRGradFocusOPT" : "SRL - FocusOPT",
+    "NGGradFocusOPT" : "NGPlus - FocusOPT",
+    "SRL_OPT" : "SRL - OPT",
+    "NGPlus_OPT" : "NGPlus - OPT"
 }
 
 
@@ -86,18 +90,18 @@ df.insert(0, "Methods", df["unlearn"].map(method_rename).fillna(df["unlearn"]))
 df.drop(columns=["unlearn", "run_id", "beta", "save_dir", "model", "unlearn_lr", "val"], inplace=True)
 
 metric_rename = {
-    "RTE": r"RTE",
-    "Fid": r"FID",
-    "relativeUA": r"rUA (%)",
-    "forget": r"UA (%)",
-    "retain": r"RA (%)",
-    "test": r"TA (%)",
-    "MIA_prob": r"MIA prob",
-    "MIA_confidence": r"MIA confidence",
-    "MIA_correctness": r"MIA correctness",
-    "MIA_entropy": r"MIA entropy",
-    "MIA_m_entropy": r"MIA mix entropy",
-    "unlearn_epochs": r"Unlearn epochs"
+    "RTE": "RTE",
+    "Fid": "FID (%)",
+    "relativeUA": "rUA (%)",
+    "forget": "UA (%)",
+    "retain": "RA (%)",
+    "test": "TA (%)",
+    "MIA_prob": "MIA prob",
+    "MIA_confidence": "MIA confidence",
+    "MIA_correctness": "MIA correctness",
+    "MIA_entropy": "MIA entropy",
+    "MIA_m_entropy": "MIA mix entropy",
+    "unlearn_epochs": "Unlearn epochs"
 }
 
 # Modifier les noms de colonnes pour les métriques

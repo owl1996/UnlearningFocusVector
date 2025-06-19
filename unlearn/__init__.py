@@ -15,8 +15,11 @@ from .SRL import SRL
 from .SRGradFocus import SRGradFocus
 from .SRGradMask import SRGradMask
 from .SalUn import SalUn
+from .SRL_OPT import SRL_OPT
+from .NGPlus_OPT import NGPlus_OPT
 from .SRGradFocusOPT import SRGradFocusOPT
 from .NGradFocusOPT import NGradFocusOPT
+
 
 from .MSG import MSG
 from .CT import CT
@@ -64,6 +67,11 @@ def get_unlearn_method(name):
         return MSG
     elif name == "CT":
         return CT
+    
+    elif name == "SRL_OPT":
+        return SRL_OPT
+    elif name == "NGPlus_OPT":
+        return NGPlus_OPT
     
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")
