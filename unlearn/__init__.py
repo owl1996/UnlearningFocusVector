@@ -7,16 +7,21 @@ from .fisher import fisher, fisher_new
 from .Wfisher import Wfisher
 
 from .NGPlus import NGPlus
-from .NGradMask import NGradMask
 from .NGSalUn import NGSalUn
+
+from .NGradMask import NGradMask
 from .NGradFocus import NGradFocus
 
 from .SRL import SRL
+
 from .SRGradFocus import SRGradFocus
 from .SRGradMask import SRGradMask
+
 from .SalUn import SalUn
+
 from .SRL_OPT import SRL_OPT
 from .NGPlus_OPT import NGPlus_OPT
+
 from .SRGradFocusOPT import SRGradFocusOPT
 from .NGradFocusOPT import NGradFocusOPT
 

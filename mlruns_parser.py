@@ -91,7 +91,7 @@ df.drop(columns=["unlearn", "run_id", "beta", "save_dir", "model", "unlearn_lr",
 
 metric_rename = {
     "RTE": "RTE",
-    "Fid": "FID (%)",
+    "Fid": "FID",
     "relativeUA": "rUA (%)",
     "forget": "UA (%)",
     "retain": "RA (%)",
