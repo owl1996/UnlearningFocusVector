@@ -11,33 +11,40 @@ baseline_train_epochs = {
 
 nums_index_to_replace = {
     "cifar10": {-1 : [2250, 4500, 22500],
-                0 : [450, 1900, 3500]
+                0 : [450, 900, 1900, 3500]
                 },
     "cifar100": {-1 : [2250, 4500, 22500],
                  0 : [45, 225, 350]
                 },
     "svhn": {-1 : [2250, 4500, 22500],
-                0 : [450, 1900, 3500]
+                0 : [450, 900, 1900, 3500]
                 }
 }
 
 base_script = "-u mlflow_forget.py"
-dataset = ["cifar10", "svhn"]
+
 
 unlearn = [
-    # "NGPlus", "NGradMask", "NGSalUn", "NGradFocus",
-    # "FT", "MSG", 
-    # "CT",
-    # "SalUn", "SRL", "SRGradFocus", "SRGradMask", 
-    "NGradFocusOPT",
+    "NGPlus", 
+    # "NGradMask", 
+    # "SRGradMask", 
+    "NGradFocus",
+    "FT", "MSG", "CT",
+    "NGSalUn", "SalUn", 
+    "SRL", "SRGradFocus", 
+    # "NGradFocusOPT",
     # "SRGradFocusOPT",
-    "SRL_OPT",
-    "NGPlus_OPT"
+    # "SRL_OPT",
+    # "NGPlus_OPT"
     ]
 unlearn_epochs = ["30"]
 archs = ["vgg16_bn", "resnet18"]
-seeds = ["1","2"]
-quantiles = ["0.3", "0.5"]
+dataset = ["cifar10", "svhn"]
+# archs = ["vgg16_bn"]
+# dataset = ["cifar10"]
+seeds = ["4","5","6"]
+quantiles = ["0.3",
+             "0.5"] # AND mask
 class_to_replace = [-1, 0]
 
 commands = [base_script
