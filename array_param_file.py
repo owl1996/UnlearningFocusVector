@@ -11,7 +11,7 @@ baseline_train_epochs = {
 
 nums_index_to_replace = {
     "cifar10": {-1 : [2250, 4500, 22500],
-                0 : [450, 900, 1900, 3500]
+                0 : [450, 1900, 3500]
                 },
     "cifar100": {-1 : [2250, 4500, 22500],
                  0 : [45, 225, 350]
@@ -29,7 +29,9 @@ unlearn = [
     # "NGradMask", 
     # "SRGradMask", 
     "NGradFocus",
+
     "FT", "MSG", "CT",
+    
     "NGSalUn", "SalUn", 
     "SRL", "SRGradFocus", 
     # "NGradFocusOPT",
@@ -38,8 +40,8 @@ unlearn = [
     # "NGPlus_OPT"
     ]
 unlearn_epochs = ["30"]
-archs = ["vgg16_bn", "resnet18"]
-dataset = ["cifar10", "svhn"]
+archs = ["resnet18"]
+dataset = ["svhn"]
 # archs = ["vgg16_bn"]
 # dataset = ["cifar10"]
 seeds = ["4","5","6"]

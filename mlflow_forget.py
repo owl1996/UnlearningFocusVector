@@ -161,7 +161,7 @@ def main():
         unlearn_method = unlearn.get_unlearn_method(args.unlearn)
 
         unlearn_method(unlearn_data_loaders, model, criterion, args)
-        unlearn.save_unlearn_checkpoint(model, None, args)
+        # unlearn.save_unlearn_checkpoint(model, None, args)
 
 if __name__ == "__main__":
     main()
