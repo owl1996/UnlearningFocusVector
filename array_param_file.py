@@ -35,10 +35,9 @@ unlearn = [
     "NGSalUn", 
     # "SalUn", 
     # "SRL", "SRGradFocus", 
-    # "NGradFocusOPT",
-    # "SRGradFocusOPT",
-    # "SRL_OPT",
-    # "NGPlus_OPT"
+
+
+
     ]
 unlearn_epochs = ["30"]
 archs = ["resnet18"]
