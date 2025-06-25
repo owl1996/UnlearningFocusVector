@@ -17,7 +17,7 @@ nums_index_to_replace = {
                  0 : [45, 225, 350]
                 },
     "svhn": {-1 : [2250, 4500, 22500],
-                0 : [450, 900, 1900, 3500]
+                0 : [450, 1900, 3500]
                 }
 }
 
@@ -26,14 +26,15 @@ base_script = "-u mlflow_forget.py"
 
 unlearn = [
     "NGPlus", 
-    # "NGradMask", 
+    "NGradMask", 
     # "SRGradMask", 
     "NGradFocus",
 
     "FT", "MSG", "CT",
     
-    "NGSalUn", "SalUn", 
-    "SRL", "SRGradFocus", 
+    "NGSalUn", 
+    # "SalUn", 
+    # "SRL", "SRGradFocus", 
     # "NGradFocusOPT",
     # "SRGradFocusOPT",
     # "SRL_OPT",
@@ -44,7 +45,7 @@ archs = ["resnet18"]
 dataset = ["svhn"]
 # archs = ["vgg16_bn"]
 # dataset = ["cifar10"]
-seeds = ["4","5","6"]
+seeds = ["1","2","3"]
 quantiles = ["0.3",
              "0.5"] # AND mask
 class_to_replace = [-1, 0]
