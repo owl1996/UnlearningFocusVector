@@ -1,0 +1,4 @@
+ideal_1900_0_svhn_resnet18_1model.pth.tar
+ideal_4500_-1_svhn_resnet18_3model.pth.tar
+ideal_4500_-1_cifar10_resnet18_3model.pth.tar
+ideal_50_-1_svhn_resnet18_8model.pth.tar

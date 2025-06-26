@@ -218,7 +218,7 @@ def evaluate(model_path):
     print('initial model : ', imodel_path)
 
     icheckpoint = torch.load(f'results/{args.dataset}/{imodel_path}', map_location=device, weights_only = False)
-    imodel.load_state_dict(icheckpoint, strict=False)
+    imodel.load_state_dict(icheckpoint["state_dict"], strict=True)
     imodel.to(device)
 
     mlflow.start_run()
@@ -263,6 +263,8 @@ def evaluate(model_path):
     mlflow.end_run()
 
 if __name__ == '__main__':
+    evaluate('ideal_50_-1_svhn_resnet18_8model.pth.tar')
+    
     base_dir = 'results/'
     eval_file_path = os.path.join(base_dir, 'eval.txt')
 
@@ -273,6 +275,7 @@ if __name__ == '__main__':
         already_evaluated = set()
 
     with open(eval_file_path, 'a') as eval_file:
+        
         for subfolder in os.listdir(base_dir):
             subfolder_path = os.path.join(base_dir, subfolder)
 
@@ -280,8 +283,11 @@ if __name__ == '__main__':
                 for item in os.listdir(subfolder_path):
                     if item.startswith("ideal") and item.endswith("model.pth.tar"):
                         if item not in already_evaluated:
-                            evaluate(item)
-                            eval_file.write(item + '\n')
-                            eval_file.flush()  # écrit immédiatement
+                            try:
+                                evaluate(item)
+                                eval_file.write(item + '\n')
+                                eval_file.flush()  # écrit immédiatement
+                            except:  # noqa: E722
+                                pass
                         else:
                             print(f"Déjà évalué : {item}")
