@@ -262,32 +262,32 @@ def evaluate(model_path):
 
     mlflow.end_run()
 
-if __name__ == '__main__':
-    evaluate('ideal_50_-1_svhn_resnet18_8model.pth.tar')
+
+# evaluate('ideal_50_-1_svhn_resnet18_8model.pth.tar')
+
+base_dir = 'results/'
+eval_file_path = os.path.join(base_dir, 'eval.txt')
+
+if os.path.exists(eval_file_path):
+    with open(eval_file_path, 'r') as f:
+        already_evaluated = set(line.strip() for line in f)
+else:
+    already_evaluated = set()
+
+with open(eval_file_path, 'a') as eval_file:
     
-    base_dir = 'results/'
-    eval_file_path = os.path.join(base_dir, 'eval.txt')
+    for subfolder in os.listdir(base_dir):
+        subfolder_path = os.path.join(base_dir, subfolder)
 
-    if os.path.exists(eval_file_path):
-        with open(eval_file_path, 'r') as f:
-            already_evaluated = set(line.strip() for line in f)
-    else:
-        already_evaluated = set()
-
-    with open(eval_file_path, 'a') as eval_file:
-        
-        for subfolder in os.listdir(base_dir):
-            subfolder_path = os.path.join(base_dir, subfolder)
-
-            if os.path.isdir(subfolder_path):
-                for item in os.listdir(subfolder_path):
-                    if item.startswith("ideal") and item.endswith("model.pth.tar"):
-                        if item not in already_evaluated:
-                            try:
-                                evaluate(item)
-                                eval_file.write(item + '\n')
-                                eval_file.flush()  # écrit immédiatement
-                            except:  # noqa: E722
-                                pass
-                        else:
-                            print(f"Déjà évalué : {item}")
+        if os.path.isdir(subfolder_path):
+            for item in os.listdir(subfolder_path):
+                if item.startswith("ideal") and item.endswith("model.pth.tar"):
+                    if item not in already_evaluated:
+                        try:
+                            evaluate(item)
+                            eval_file.write(item + '\n')
+                            eval_file.flush()  # écrit immédiatement
+                        except:  # noqa: E722
+                            pass
+                    else:
+                        print(f"Déjà évalué : {item}")

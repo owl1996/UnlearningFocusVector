@@ -111,7 +111,8 @@ def NGradFocus(data_loaders, model, criterion, optimizer, epoch, args, VF = None
             # mask_grads[idx_param] = mask_grad
 
             # Save vmask to study the distribution of cdf
-            # torch.save(vmask, f"{args.save_dir}/vmask/vmask_{idx_param}_{epoch}.pt")
+            torch.save(cdf_forget, f"{args.save_dir}/vmask/cdf_forget_{idx_param}_{epoch}.pt")
+            torch.save(cdf_retain, f"{args.save_dir}/vmask/cdf_retain_{idx_param}_{epoch}.pt")
 
             # update grad
             param.grad = vmask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
