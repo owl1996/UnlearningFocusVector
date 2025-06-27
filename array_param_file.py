@@ -10,7 +10,10 @@ baseline_train_epochs = {
 }
 
 nums_index_to_replace = {
-    "cifar10": {-1 : [2250, 4500, 22500],
+    # "cifar10": {-1 : [2250, 4500, 22500],
+    #             0 : [450, 1900, 3500]
+    #             },
+        "cifar10": {-1 : [4500],
                 0 : [450, 1900, 3500]
                 },
     "cifar100": {-1 : [2250, 4500, 22500],
@@ -25,29 +28,28 @@ base_script = "-u mlflow_forget.py"
 
 
 unlearn = [
-    "NGPlus", 
-    "NGradMask", 
-    # "SRGradMask", 
-    "NGradFocus",
+    # "NGPlus", 
+    # "NGradMask", 
+    "SRGradMask", 
+    # "NGradFocus",
 
     "FT", "MSG", "CT",
     
-    "NGSalUn", 
-    # "SalUn", 
-    # "SRL", "SRGradFocus", 
-
-
-
+    # "NGSalUn", 
+    "SalUn", 
+    "SRL", "SRGradFocus", 
     ]
 unlearn_epochs = ["30"]
-archs = ["resnet18"]
-dataset = ["svhn"]
-# archs = ["vgg16_bn"]
-# dataset = ["cifar10"]
-seeds = ["1","2","3"]
+# archs = ["resnet18"]
+# dataset = ["svhn"]
+archs = ["vgg16_bn"]
+dataset = ["cifar10"]
+seeds = ["1"]
+batch_sizes = ["32","64","128","254","512"]
 quantiles = ["0.3",
              "0.5"] # AND mask
-class_to_replace = [-1, 0]
+# class_to_replace = [-1, 0]
+class_to_replace = [-1]
 
 commands = [base_script
             + " --save_dir ./results/" + _dataset
@@ -63,7 +65,8 @@ commands = [base_script
             + " --num_indexes_to_replace " + str(_nums_index_to_replace)
             + " --class_to_replace " + str(_class_to_replace)
             + " --beta " + "0.95"
-            for (_dataset, _unlearn, _unlearn_epochs, _seed, _arch, _class_to_replace) in itertools.product(dataset, unlearn, unlearn_epochs, seeds, archs, class_to_replace)
+            + " --batch_size " + _batch_size
+            for (_dataset, _unlearn, _unlearn_epochs, _seed, _arch, _class_to_replace, _batch_size) in itertools.product(dataset, unlearn, unlearn_epochs, seeds, archs, class_to_replace, batch_sizes)
             for _nums_index_to_replace in nums_index_to_replace[_dataset][_class_to_replace]
 ]
 
