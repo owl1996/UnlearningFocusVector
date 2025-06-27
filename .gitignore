@@ -46,6 +46,7 @@ README.MD
 mlruns_parsed.csv
 mlflow.db
 
+results/eval.txt
 eval.txt
 
 # PyInstaller
