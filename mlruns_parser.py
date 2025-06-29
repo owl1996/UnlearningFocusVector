@@ -80,7 +80,13 @@ method_rename = {
     "SRGradFocusOPT" : "SRL - FocusOPT",
     "NGGradFocusOPT" : "NGPlus - FocusOPT",
     "SRL_OPT" : "SRL - OPT",
-    "NGPlus_OPT" : "NGPlus - OPT"
+    "NGPlus_OPT" : "NGPlus - OPT",
+    "SCRUBANDMask": "SCRUB - ANDMask",
+    "SCRUB": "SCRUB",
+    "SCRUBFocus": "SCRUB - GradFocus",
+    "SCRUBGradMask": "SCRUB - GradMask",
+    "SCRUBSalUn": "SCRUB - SalUn"
+
 }
 
 
@@ -132,4 +138,5 @@ df = df[["Methods", "num_indexes_to_replace", "class_to_replace", "Unlearn epoch
          "MIA correctness","MIA confidence","MIA prob", "MIA entropy",
          "MIA mix entropy", "arch", "dataset", "seed"]]
 
-df.to_csv("mlruns_parsed.csv", index=False)
+# df.to_csv("mlruns_parsed.csv", index=False)
+df.to_csv("scrub_parsed.csv", index=False)
