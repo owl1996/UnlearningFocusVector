@@ -25,6 +25,10 @@ from .NGPlus_OPT import NGPlus_OPT
 from .SRGradFocusOPT import SRGradFocusOPT
 from .NGradFocusOPT import NGradFocusOPT
 
+from .SCRUB import SCRUB
+from .SCRUBSalUn import SCRUBSalUn
+from .SCRUBGradMask import SCRUBGradMask
+from .SCRUBFocus import SCRUBFocus
 
 from .MSG import MSG
 from .CT import CT
@@ -78,5 +82,14 @@ def get_unlearn_method(name):
     elif name == "NGPlus_OPT":
         return NGPlus_OPT
     
+    elif name == "SCRUBFocus":
+        return SCRUBFocus
+    elif name == "SCRUBGradMask":
+        return SCRUBGradMask
+    elif name == "SCRUBSalUn":
+        return SCRUBSalUn
+    elif name == "SCRUB":
+        return SCRUB
+
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")

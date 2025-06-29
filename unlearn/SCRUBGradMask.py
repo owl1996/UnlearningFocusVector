@@ -1,7 +1,9 @@
 import sys
 import time
 import torch
+import torch.nn.functional as F
 import utils
+from models import *
 
 from .impl import iterative_unlearn
 
@@ -13,12 +15,11 @@ sys.path.append(".")
 import evaluation
 
 normal_dist = torch.distributions.Normal(loc=0.0, scale=1.0)
+kl_loss = torch.nn.KLDivLoss(reduction="batchmean")
 
 @iterative_unlearn
-def NGradFocus(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
-    """NGradFocus unlearning method."""
-    rho = 0.9 # momentum for the variance estimation
-    
+def SCRUBGradMask(data_loaders, model, criterion, optimizer, epoch, args, VF = None, VR = None):
+    rho = 0.9
     mlflow.start_run()
     mlflow.log_param("seed", args.seed)
     mlflow.log_param("save_dir", args.save_dir)
@@ -49,7 +50,14 @@ def NGradFocus(data_loaders, model, criterion, optimizer, epoch, args, VF = None
     else:
         device = torch.device("cpu")
 
-    # mask_grads = [torch.ones_like(param) for param in model.parameters()]
+    # SCRUB Teacher
+    teacher = model_dict[args.arch](num_classes=10)
+    checkpoint = torch.load(args.mask, map_location=device, weights_only = False)
+    if "state_dict" in checkpoint.keys():
+        checkpoint = checkpoint["state_dict"]
+    teacher.load_state_dict(checkpoint, strict=True)
+    teacher.to(device)
+    teacher.eval()
 
     start = time.time()
     model.train()
@@ -66,7 +74,7 @@ def NGradFocus(data_loaders, model, criterion, optimizer, epoch, args, VF = None
 
         model.zero_grad()
 
-        loss = - criterion(model(image), target)
+        loss = - kl_loss(F.softmax(teacher(image), dim=1), F.softmax(model(image), dim=1)).mean()
         optimizer.zero_grad()
         loss.backward()
 
@@ -84,7 +92,7 @@ def NGradFocus(data_loaders, model, criterion, optimizer, epoch, args, VF = None
 
         model.zero_grad()
         output_clean = model(image)
-        loss = criterion(output_clean, target)
+        loss = criterion(output_clean, target) + kl_loss(F.softmax(teacher(image), dim=1), F.softmax(model(image), dim=1)).mean()
         optimizer.zero_grad()
         loss.backward()
 
@@ -104,7 +112,7 @@ def NGradFocus(data_loaders, model, criterion, optimizer, epoch, args, VF = None
 
             # quantiles mask
             vmask = cdf_forget * cdf_retain + (1. - cdf_forget) * (1. - cdf_retain)
-            # mask = (vmask >= args.quantile)
+            mask = (vmask >= args.quantile)
 
             # # imbriqué
             # mask_grad = mask * mask_grads[idx_param]
@@ -115,7 +123,7 @@ def NGradFocus(data_loaders, model, criterion, optimizer, epoch, args, VF = None
             # torch.save(cdf_retain, f"{args.save_dir}/vmask/cdf_retain_{idx_param}_{epoch}.pt")
 
             # update grad
-            param.grad = vmask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
+            param.grad = mask * (args.beta * param.grad + (1 - args.beta) * grad_forget[idx_param])
 
             # print("Ratio of masked parameters : ", mask_grad.sum() / mask.numel())
 
