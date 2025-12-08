@@ -34,7 +34,7 @@ class_to_replace :
     put -1 to unlearn from any class
 num_indexes_to_replace : number of samples to unlearn
 
-```python u_ mlflow_forget.py --save_dir ./results/cifar10 --mask ./results/cifar10/1resnet18_ep100model_SA_best.pth.tar --unlearn VarGrad --unlearn_epochs 4 --unlearn_lr 0.0001 --data ./data --dataset cifar10 --seed 1 --arch resnet18 --epochs 100 --num_indexes_to_replace 450 --beta 0.9 --quantile 0.55 --class_to_replace -1```
+```python -u mlflow_forget.py --save_dir ./results/cifar10 --mask ./results/cifar10/1resnet18_ep100model_SA_best.pth.tar --unlearn VarGrad --unlearn_epochs 4 --unlearn_lr 0.0001 --data ./data --dataset cifar10 --seed 1 --arch resnet18 --epochs 100 --num_indexes_to_replace 450 --beta 0.9 --quantile 0.55 --class_to_replace -1```
 
 ## Example Cifar10
 
@@ -60,4 +60,5 @@ It creates a .csv file you can work on named 'mlruns_parsed.csv'.
 
 ## Methods and Add-On technique
 Each method with or without add-on is coded following a certain scheme in the folder unlearn/
+
 If you want to add a method, please make sure it goes well with unlearn/impl.py and unlearn/__init__.py
