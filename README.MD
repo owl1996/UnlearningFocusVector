@@ -1,63 +1,97 @@
 <div align="center">
 
-# Improving Unlearning with Model Updates Probably Aligned with Gradients
+# Exact Unlearning Approximations
 
-## Abstract
-Machine learning models become increasingly integrated into real world applications. Concerns over data confidentiality, user privacy, and how to apply the European GDPR "right to be forgotten" \cite{Hoofnagle2019TheEU} have intensified.
-Since models contain artifacts of potentially sensitive training data, the ability to remove the detectability of specific training data from a model has emerged as a key mechanism of model confidentiality. 
-Bi-objective first-order approximate Machine Unlearning (MU) methods rely on computing gradients of a new utility loss $L_U$ over samples $\sD_U$ to update the parameters of a model that was already trained to minimize some cost loss $L_C$ over initial samples $\sD_C$.
+[![Status](https://img.shields.io/badge/status-active-success.svg)](https://github.com/anonymous/unlearning-repo) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](/LICENSE)
 
-This work aims to unify and improve bi-objectives first-order methods for approximate deep supervised MU through a single problem formulation on which we can plug efficient add-on techniques.
+*Anonymized Source Code for NeurIPS Submission*
 
+</div>
 
-## Code Structure
-The source code is a far fork from other MU project from other team we will give credit after the anonymization process. It is organized as follows:
+---
 
-```evaluation```: contains rUA, FID and MIA evaluation code.
+## 📖 Abstract
 
-```models```: contains the model definitions.
+As machine learning models become increasingly integrated into real-world applications, concerns over data confidentiality, user privacy, and compliance with the European GDPR "right to be forgotten" have intensified. Because models can contain accessible artifacts of their potentially sensitive training data, the ability to remove the detectability of specific training features from an already-trained model has emerged as a key mechanism for model confidentiality. 
+---
 
-```main_baseline.py```: contains the code for training a initial model to unlearn. 
+## 🏗️ Repository Structure
 
-```main_ideal.py```: contains the code for training a exact ideal model to unlearn w.r.t. the seed.
+The architecture of this repository provides an extensible framework mimicking robust Machine Learning lifecycles:
 
-```mlflow_forget.py```: main executable to test the methods
+- **`models/`**: Deep Neural Network definitions (e.g., ResNet, VGG).
+- **`evaluation/`**: Specialized MU metric code calculating relative Unlearning Accuracy (`rUA`), Retained Accuracy (Fidelity/`FID`), and Membership Inference Attacks (`MIA`).
+- **`unlearn/`**: The extensible library implementing the core MU algorithms (e.g., `OS_unlearn`, `LDA`, `fisher`, `VarGrad`).
+- **`notebooks/`**: Analytical Jupyter notebooks streamlining tracking and data analysis.
+  - `gaussian_study.ipynb`: Analyzes the multivariate normality hypothesis of the extracted penultimate features using Chi-Square Q-Q plots.
+  - `benchmark.ipynb`: An automated benchmarking loop to programmatically aggregate tracking data directly off `mlflow_forget.py`.
+  - `results/mlflow_results_study.ipynb`: Consolidates and visualizes MLflow performance outcomes (`rUA` vs `RTE` vs `FID`).
+- **`results/`**: Execution directory where `checkpoint` and `.pth.tar` weights are automatically stored.
+- **`mlruns/`**: Integrated MLFlow tracking environment.
 
-## Requirements
+---
+
+## 🛠️ Installation & Requirements
+> Ensure your system is running Python 3.8+ and contains accessible local dataset targets.
+
+1. **Clone the anonymized repository**
+2. **Install the unified requirements**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+---
+
+## 🚀 Usage Guide
+
+### 1. Training the Initial & Exact Ideal Baselines
+The `main_baseline.py` and `main_ideal.py` scripts act as initialization protocols for subsequent model unlearning comparisons.
+
+**Cifar10 Baseline Example:**
+```bash
+python -u main_baseline.py --data ./data --dataset cifar10 --arch resnet18 --save_dir ./results/cifar10 --epochs 10 --num_indexes_to_replace 4500
 ```
-pip install requirements.txt
+**Cifar100 Baseline Example:**
+```bash
+python -u main_baseline.py --data ./data --dataset cifar100 --arch resnet18 --save_dir ./results/cifar100 --epochs 50 --num_indexes_to_replace 450 --num_classes 100
 ```
 
-## How to use (Example)
-class_to_replace :  
-    0 by default (the class in which take samples to unlearn)
-    put -1 to unlearn from any class
-num_indexes_to_replace : number of samples to unlearn
+### 2. Performing Unlearning
+To scrub the target dataset, utilize the unified execution file `mlflow_forget.py`.
+- `--class_to_replace`: Provide `-1` to randomly unlearn from any class, or `0` for specific target sampling.
+- `--num_indexes_to_replace`: Volume of indexes to forcibly prune.
 
-```python u_ mlflow_forget.py --save_dir ./results/cifar10 --mask ./results/cifar10/1resnet18_ep100model_SA_best.pth.tar --unlearn VarGrad --unlearn_epochs 4 --unlearn_lr 0.0001 --data ./data --dataset cifar10 --seed 1 --arch resnet18 --epochs 100 --num_indexes_to_replace 450 --beta 0.9 --quantile 0.55 --class_to_replace -1```
+**Example Command (VarGrad):**
+```bash
+python -u mlflow_forget.py --save_dir ./results/cifar10 --mask ./results/cifar10/1resnet18_ep100model_SA_best.pth.tar --unlearn VarGrad --unlearn_epochs 4 --unlearn_lr 0.0001 --data ./data --dataset cifar10 --seed 1 --arch resnet18 --epochs 100 --num_indexes_to_replace 450 --beta 0.9 --quantile 0.55 --class_to_replace -1
+```
 
-## Example Cifar10
+---
 
-```python -u main_baseline.py --data ./data --dataset cifar10 --arch resnet18 --save_dir ./results/cifar10 --epochs 10 --num_indexes_to_replace 4500```
+## 📊 Benchmarking & MLFlow Evaluation
 
-## Example Cifar 100
+This repository natively interfaces automated testing frameworks alongside MLflow integration.
 
-```python -u main_baseline.py --data ./data --dataset cifar100 --arch resnet18 --save_dir ./results/cifar100 --epochs 50 --num_indexes_to_replace 450 --num_classes 100```
+1. **Setup Tracking Target**: Ensure the `results/` folder initializes a valid subdirectory reflecting your target dataset.
+2. **Parameters Mapping**: Configure your array parameters inside `array_param_file.py` and invoke it to establish constraints.
+3. **Execution Arrays**: Sequentially execute the arguments populated in `base_params.txt` followed by the method constraints parsed in `params.txt`.
+4. **Notebook Benchmarking**: Alternately, streamline the execution lifecycle dynamically utilizing the provided script generated at `notebooks/benchmark.ipynb` via Python subprocess piping.
 
-## Benchmarking
-(0) ensure the folder results/ contains a folder named as your dataset (if not, create it).
-(1) put your methods, parameters and hyper-parameters in array_param_file.py and run it.
-(2) run every line of base_params.txt to initialize the models initial and exact ideal
-(3) run every line of params.txt
+### MLFlow Parsers
+Logged MLruns are accessible natively under `/mlruns/`. To extract and utilize visualization pipelines natively:
+```bash
+python mlruns_parser.py
+```
+This formulates a localized readable `mlruns_parsed.csv` schema that feeds directly into `notebooks/results/mlflow_results_study.ipynb` for empirical visualizations linking runtimes (`RTE`) and performance (`rUA` vs `FID`).
 
-Your results will be stored in the mlruns/ folder.
-Your models will be stored in results/$your_dataset$/
+---
 
-## Parsing Results
-To parse your results run the command :
-```python mlruns_parser.py```
-It creates a .csv file you can work on named 'mlruns_parsed.csv'.
+## 🔗 Extensibility
+Each MU algorithm and Add-On logic resides under the modular `unlearn/` ecosystem. To introduce novel MU mechanisms:
+1. Generate the implementation subset file under `unlearn/MethodName.py`.
+2. Map the execution constraints mapping via the dispatch API `unlearn/impl.py` and `unlearn/__init__.py`.
 
-## Methods and Add-On technique
-Each method with or without add-on is coded following a certain scheme in the folder unlearn/
-If you want to add a method, please make sure it goes well with unlearn/impl.py and unlearn/__init__.py
+---
+
+## 📝 Acknowledgements
+> *This structure has been forked from parallel MU research efforts; specific original team crediting will occur unconditionally following the conclusions of the double-blind review process.*
