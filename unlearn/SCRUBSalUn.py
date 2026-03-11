@@ -19,8 +19,7 @@ kl_loss = torch.nn.KLDivLoss(reduction="batchmean")
 
 @iterative_unlearn
 def SCRUBSalUn(data_loaders, model, criterion, optimizer, epoch, args):
-    rho = 0.9 # momentum for the variance estimation
-    
+
     mlflow.start_run()
     mlflow.log_param("seed", args.seed)
     mlflow.log_param("save_dir", args.save_dir)

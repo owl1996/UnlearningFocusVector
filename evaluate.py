@@ -263,8 +263,6 @@ def evaluate(model_path):
     mlflow.end_run()
 
 
-# evaluate('ideal_50_-1_svhn_resnet18_8model.pth.tar')
-
 base_dir = 'results/'
 eval_file_path = os.path.join(base_dir, 'eval.txt')
 
@@ -281,13 +279,14 @@ with open(eval_file_path, 'a') as eval_file:
 
         if os.path.isdir(subfolder_path):
             for item in os.listdir(subfolder_path):
-                if item.startswith("ideal") and item.endswith("model.pth.tar"):
+                if item.startswith("ideal_4500_-1_cifar10_vgg16_bn") and item.endswith("model.pth.tar"):
                     if item not in already_evaluated:
+                        print(f"Evaluation : {item}")
                         try:
                             evaluate(item)
                             eval_file.write(item + '\n')
                             eval_file.flush()  # écrit immédiatement
                         except:  # noqa: E722
-                            pass
+                            print(f"ERROR : {item}")
                     else:
                         print(f"Déjà évalué : {item}")

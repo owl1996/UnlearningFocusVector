@@ -139,4 +139,4 @@ df = df[["Methods", "num_indexes_to_replace", "class_to_replace", "Unlearn epoch
          "MIA mix entropy", "arch", "dataset", "seed"]]
 
 # df.to_csv("mlruns_parsed.csv", index=False)
-df.to_csv("scrub_parsed.csv", index=False)
+df.to_csv("mlruns_parsed.csv", index=False)

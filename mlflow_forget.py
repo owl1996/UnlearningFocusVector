@@ -137,7 +137,6 @@ def main():
 
     criterion = nn.CrossEntropyLoss()
     
-
     evaluation_result = None
 
     if args.resume:

@@ -33,6 +33,9 @@ from .SCRUBFocus import SCRUBFocus
 from .MSG import MSG
 from .CT import CT
 
+from .OS import OS_unlearn
+from .LDA import LDA_unlearn
+
 def get_unlearn_method(name):
     """method usage:
 
@@ -91,5 +94,10 @@ def get_unlearn_method(name):
     elif name == "SCRUB":
         return SCRUB
 
+    elif name == "OS_unlearn":
+        return OS_unlearn
+    elif name == "LDA":
+        return LDA_unlearn
+    
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")

@@ -30,14 +30,17 @@ base_script = "-u mlflow_forget.py"
 unlearn = [
     # "NGPlus", 
     # "NGradMask", 
-    "SRGradMask", 
-    # "NGradFocus",
+    # "SRGradMask", 
+    # # "NGradFocus",
 
-    "FT", "MSG", "CT",
+    # "FT", "MSG", "CT",
     
-    # "NGSalUn", 
-    "SalUn", 
-    "SRL", "SRGradFocus", 
+    # # "NGSalUn", 
+    # "SalUn", 
+    # "SRL", "SRGradFocus", 
+    "SCRUB","SCRUBGradMask",
+    "SCRUBSalUn",
+    "SCRUBFocus"
     ]
 unlearn_epochs = ["30"]
 # archs = ["resnet18"]
@@ -45,7 +48,9 @@ unlearn_epochs = ["30"]
 archs = ["vgg16_bn"]
 dataset = ["cifar10"]
 seeds = ["1"]
-batch_sizes = ["32","64","128","254","512"]
+seeds = ["1","2","3","4","5","6"]
+batch_sizes = ["32","64","128","256","512"]
+batch_sizes = ["256"]
 quantiles = ["0.3",
              "0.5"] # AND mask
 # class_to_replace = [-1, 0]

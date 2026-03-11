@@ -196,3 +196,12 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+base_parsed.csv
+heatmap.pdf
+myImagePDF.pdf
+NGPlus - Compare add-on.pdf
+.gitignore
+mlruns_parsed.csv
+mlruns_parsed.csv
+mlruns_parsed.csv
+mlruns_parsed.csv

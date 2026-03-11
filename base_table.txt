@@ -1,0 +1,3 @@
+Methods & \textbf{RTE} & \textbf{FID} & \textbf{rUA} & \textbf{UA} & \textbf{RA} & \textbf{TA} & \textbf{MIA entropy} \\
+ideal & 0.0 $\pm$ 0.0 & 100.0 $\pm$ 0.0 & 0.0 $\pm$ 0.0 & 93.01 $\pm$ 0.65 & 99.55 $\pm$ 0.04 & 92.53 $\pm$ 0.13 & 0.85 $\pm$ 0.01 \\
+initial & 0.0 $\pm$ 0.0 & 43.27 $\pm$ 42.98 & -47.5 $\pm$ 45.72 & 45.51 $\pm$ 45.84 & 45.47 $\pm$ 45.76 & 43.07 $\pm$ 42.65 & 0.49 $\pm$ 0.46 \\

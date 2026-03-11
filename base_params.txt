@@ -1,2 +1,12 @@
 -u main_baseline.py --save_dir ./results/cifar10 --data ./data --dataset cifar10 --seed 1 --arch vgg16_bn --epochs 100
+-u main_baseline.py --save_dir ./results/cifar10 --data ./data --dataset cifar10 --seed 2 --arch vgg16_bn --epochs 100
+-u main_baseline.py --save_dir ./results/cifar10 --data ./data --dataset cifar10 --seed 3 --arch vgg16_bn --epochs 100
+-u main_baseline.py --save_dir ./results/cifar10 --data ./data --dataset cifar10 --seed 4 --arch vgg16_bn --epochs 100
+-u main_baseline.py --save_dir ./results/cifar10 --data ./data --dataset cifar10 --seed 5 --arch vgg16_bn --epochs 100
+-u main_baseline.py --save_dir ./results/cifar10 --data ./data --dataset cifar10 --seed 6 --arch vgg16_bn --epochs 100
 -u main_ideal.py --save_dir ./results/cifar10 --data ./data --dataset cifar10 --seed 1 --arch vgg16_bn --epochs 100 --num_indexes_to_replace 4500 --class_to_replace -1
+-u main_ideal.py --save_dir ./results/cifar10 --data ./data --dataset cifar10 --seed 2 --arch vgg16_bn --epochs 100 --num_indexes_to_replace 4500 --class_to_replace -1
+-u main_ideal.py --save_dir ./results/cifar10 --data ./data --dataset cifar10 --seed 3 --arch vgg16_bn --epochs 100 --num_indexes_to_replace 4500 --class_to_replace -1
+-u main_ideal.py --save_dir ./results/cifar10 --data ./data --dataset cifar10 --seed 4 --arch vgg16_bn --epochs 100 --num_indexes_to_replace 4500 --class_to_replace -1
+-u main_ideal.py --save_dir ./results/cifar10 --data ./data --dataset cifar10 --seed 5 --arch vgg16_bn --epochs 100 --num_indexes_to_replace 4500 --class_to_replace -1
+-u main_ideal.py --save_dir ./results/cifar10 --data ./data --dataset cifar10 --seed 6 --arch vgg16_bn --epochs 100 --num_indexes_to_replace 4500 --class_to_replace -1

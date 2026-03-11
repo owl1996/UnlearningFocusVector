@@ -14,7 +14,11 @@ def relativeUA(model, loader, args, device):
     ideal.to(device)
 
     checkpoint_path = "ideal_" + str(args.num_indexes_to_replace) + "_" + str(args.class_to_replace) + "_" + str(args.dataset) + "_" + str(args.arch) + "_" + str(args.seed)
-    checkpoint = torch.load("./results/" + str(args.dataset) + "/" + checkpoint_path + "model.pth.tar", map_location=device, weights_only = True)
+    # Check if args.save_dir is defined, else fallback to hardcoded path
+    save_dir = getattr(args, 'save_dir', f"./results/{args.dataset}")
+    if save_dir is None:
+        save_dir = f"./results/{args.dataset}"
+    checkpoint = torch.load(os.path.join(save_dir, checkpoint_path + "model.pth.tar"), map_location=device, weights_only=True)
     ideal.load_state_dict(checkpoint)
     ideal.eval()
 
