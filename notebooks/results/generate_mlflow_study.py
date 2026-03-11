@@ -110,29 +110,63 @@ cells.append(nbf.v4.new_code_cell(code_box))
 # Scatter Epoch vs RTE vs rUA
 cells.append(nbf.v4.new_markdown_cell("## 3. Training Cost Analysis\nObserve the tradeoff between Unlearning Epochs, Time Spent (RTE), and Performance (rUA)."))
 
-code_scatter = """
+code_scatter = r"""
 if not df_filtered.empty and 'Unlearn epochs' in df_filtered.columns and 'RTE' in df_filtered.columns:
-    plt.figure(figsize=(8, 6))
+    # NeurIPS Aesthetics
+    sns.set_style("whitegrid")
+    plt.rcParams.update({
+        "font.family": "serif",
+        "font.size": 12,
+        "axes.labelsize": 14,
+        "axes.titlesize": 16,
+        "legend.fontsize": 11,
+        "xtick.labelsize": 11,
+        "ytick.labelsize": 11,
+    })
+
+    plt.figure(figsize=(10, 7))
     
+    # Base Scatter Plot
     scatter = sns.scatterplot(
         data=df_filtered, 
-        x='Unlearn epochs', 
-        y='RTE', 
+        x='RTE', 
+        y='rUA', 
         hue='Methods',
-        size='rUA',
-        sizes=(20, 200),
-        alpha=0.7,
+        style='Methods',
+        s=150,           # Static larger size for visibility
+        alpha=0.85,
+        edgecolor='k',   # Dark edge for contrast
         palette='tab10'
     )
     
-    plt.title('Computation Cost vs Iterations vs Performance')
-    plt.xlabel('Unlearning Epochs')
-    plt.ylabel('Run Time Elapsed (s)')
+    # ---------------------------------------------
+    # Pareto Frontier Calculation (Minimize RTE, Maximize rUA)
+    # ---------------------------------------------
+    # Sort by RTE ascending, then rUA descending
+    df_sorted = df_filtered.sort_values(by=['RTE', 'rUA'], ascending=[True, False])
     
-    # Move legend outside
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
-    plt.grid(True, linestyle='--', alpha=0.5)
+    pareto_front = []
+    max_rUA_so_far = -float('inf')
+    
+    for index, row in df_sorted.iterrows():
+        if row['rUA'] > max_rUA_so_far:
+            pareto_front.append((row['RTE'], row['rUA']))
+            max_rUA_so_far = row['rUA']
+            
+    if pareto_front:
+        pareto_x, pareto_y = zip(*pareto_front)
+        # Plot the Pareto envelope
+        plt.plot(pareto_x, pareto_y, '--', color='red', linewidth=2.5, alpha=0.7, label='Pareto Frontier')
+
+    plt.title('Performance vs Computational Cost\\nPareto Frontier Analysis')
+    plt.xlabel('Run Time Elapsed (s) $\\downarrow$')
+    plt.ylabel('Relative Unlearning Accuracy (rUA %) $\\uparrow$')
+    
+    # Move legend outside elegantly
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, frameon=True, shadow=True)
+    
     plt.tight_layout()
+    plt.savefig("pareto_analysis_neurips.pdf", format='pdf', bbox_inches='tight')
     plt.show()
 else:
     print("Required columns for scatter plot are missing.")

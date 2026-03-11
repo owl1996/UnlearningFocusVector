@@ -34,7 +34,7 @@ from .MSG import MSG
 from .CT import CT
 
 from .OS import OS_unlearn
-from .LDA import LDA_unlearn
+from .LDA import LDA_unlearn, LDA_CG_unlearn, LDA_update_unlearn
 
 def get_unlearn_method(name):
     """method usage:
@@ -98,6 +98,10 @@ def get_unlearn_method(name):
         return OS_unlearn
     elif name == "LDA":
         return LDA_unlearn
+    elif name == "LDA_CG":
+        return LDA_CG_unlearn
+    elif name == "LDA_update":
+        return LDA_update_unlearn
     
     else:
         raise NotImplementedError(f"Unlearn method {name} not implemented!")

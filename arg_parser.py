@@ -137,6 +137,12 @@ def parse_args():
         help="Specific index data to forget",
     )
     parser.add_argument("--alpha", default=0.2, type=float, help="unlearn noise")
+    parser.add_argument(
+        "--cg_iterations",
+        type=int,
+        default=50,
+        help="Number of Conjugate Gradient iterations for LDA_CG",
+    )
 
     ##################################### Attack setting #################################################
     parser.add_argument(

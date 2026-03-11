@@ -113,18 +113,22 @@ metric_rename = {
 # Modifier les noms de colonnes pour les métriques
 df.rename(columns=metric_rename, inplace=True)
 
+desired_columns = [
+    "Methods", "num_indexes_to_replace", "class_to_replace", "Unlearn epochs", "RTE", "FID", 
+    "rUA (%)", "UA (%)", "RA (%)", "TA (%)", "MIA correctness","MIA confidence",
+    "MIA prob", "MIA entropy", "MIA mix entropy", "arch", "dataset", "seed"
+]
+
+# Keep only desired columns before dropna so we don't drop rows missing unrelated params (like cg_iterations)
+existing_desired_columns = [col for col in desired_columns if col in df.columns]
+df = df[existing_desired_columns]
+
 # convert all metrics to float
 for col in df.columns:
     if col not in ["Methods", "num_indexes_to_replace", "dataset", "arch"]:
-        # print(col)
         df[col] = df[col].astype(float)
 
 df = df.dropna()
-
-for col in df.columns:
-    if col not in ["Methods", "num_indexes_to_replace", "dataset", "arch"]:
-        # print(col)
-        df[col] = df[col].astype(float)
 
 df["Unlearn epochs"] = df["Unlearn epochs"].astype(int)
 df["seed"] = df["seed"].astype(int)
@@ -132,11 +136,4 @@ df["class_to_replace"] = df["class_to_replace"].astype(int)
 
 df.sort_values(by=["num_indexes_to_replace", "Methods", "Unlearn epochs"], inplace=True)
 
-# Change orders of columns
-
-df = df[["Methods", "num_indexes_to_replace", "class_to_replace", "Unlearn epochs", "RTE", "FID", "rUA (%)", "UA (%)", "RA (%)", "TA (%)",
-         "MIA correctness","MIA confidence","MIA prob", "MIA entropy",
-         "MIA mix entropy", "arch", "dataset", "seed"]]
-
-# df.to_csv("mlruns_parsed.csv", index=False)
 df.to_csv("mlruns_parsed.csv", index=False)
