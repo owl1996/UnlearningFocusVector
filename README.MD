@@ -68,6 +68,22 @@ python -u mlflow_forget.py --save_dir ./results/cifar10 --mask ./results/cifar10
 
 ---
 
+## 🧠 Core Methodology: Exact LDA Update (`LDA_update_unlearn`)
+
+The theoretical centerpiece of the unlearning framework is the Exact LDA Update routine (`unlearn/LDA.py:LDA_update_unlearn`). It avoids full retraining by algebraically isolating the theoretical contribution of the forgotten dataset to the readout layer using Linear Discriminant Analysis principles.
+
+This involves computing the optimal linear weight deviation $\Delta_W$ analytically without backpropagation.
+
+### Update Workflow:
+1. **Mean Tracking**: Extracts the average penultimate activations generated per-class across the *retain* set ($M_r$) and *forget* set ($M_u$), alongside aggregating the theoretical dataset global mean ($M_0$). This exposes the shift in activation means: $\Delta_M = M_0 - M_r$.
+2. **Scatter Matrices Gathering**: Computes the within-class scatter matrix for the retained data ($\Sigma_r$) and the internal scatter of the forget set features specifically surrounding the theoretical global centroid $M_0$ bounds ($\Sigma_{u0}$).
+3. **Structural Whitening Approximation ($\Delta_S$)**: Approximates the difference in covariance distributions caused by the targeted removal: $\Delta_S = \Sigma_{u0} + n_r \Delta_M^T \Delta_M$.
+4. **Isolating the Delta**: An analytical constraint $B$ is composed specifying the gap in the pre-activations: $B = \Delta_M - W_{net} \Delta_S$.
+5. **Conjugate Gradient Solver**: Solves the linear derivation bounds formulated to generate the exact network update $\Delta_{LDA} = (\Delta_M - W_{net} \Delta_S) \Sigma_r^{-1}$. An optimized batched CG iterative solver calculates this inverse matrix multiplication efficiently on-device natively.
+6. **Direct Weight Scrubbing**: Instead of descending on proxy gradients, the final network classifier weights logically deduct this precise theoretical impact directly: $W_{new} = W_{net} - \Delta_{LDA}$.
+
+---
+
 ## 📊 Benchmarking & MLFlow Evaluation
 
 This repository natively interfaces automated testing frameworks alongside MLflow integration.
