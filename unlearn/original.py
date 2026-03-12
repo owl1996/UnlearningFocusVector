@@ -33,7 +33,6 @@ def original(data_loaders, model, criterion, args):
 
     train_loader = data_loaders["retain"]
     retain_loader = torch.utils.data.DataLoader(data_loaders["retain"].dataset, batch_size = args.batch_size, shuffle=True)
-    retain_loader_iter = enumerate(retain_loader)
     forget_loader = data_loaders["forget"]
 
     losses = utils.AverageMeter()
@@ -60,7 +59,6 @@ def original(data_loaders, model, criterion, args):
                 torch.utils.data.Subset(train_loader.dataset, list(range(len(data_loaders["test"].dataset)))), batch_size=args.batch_size, shuffle=False
             )
     MIA_classifiers = evaluation.SVC_classifiers(MIA_trainer_loader, data_loaders["test"], model)
-    # print(evaluation.SVC_predict(MIA_classifiers, forget_loader, model))
     eval = evaluation.SVC_predict(MIA_classifiers, forget_loader, model)
     print(eval)
     for key, val in eval.items():

@@ -6,6 +6,10 @@ from sklearn.svm import SVC
 from imagenet import get_x_y_from_data_dict
 
 
+def gaussian_pdf(x, mu, sigma):
+    sigma = np.maximum(sigma, 1e-8)
+    return (1.0 / (np.sqrt(2 * np.pi) * sigma)) * np.exp(-0.5 * ((x - mu) / sigma) ** 2)
+
 def entropy(p, dim=-1, keepdim=False):
     return -torch.where(p > 0, p * p.log(), p.new([0.0])).sum(dim=dim, keepdim=keepdim)
 
@@ -163,10 +167,8 @@ def SVC_MIA(shadow_train, target_train, target_test, shadow_test, model):
     return m
 
 def SVC_classifier(shadow_train, shadow_test):
-    "Return a classifier model"
     n_shadow_train = shadow_train.shape[0]
     n_shadow_test = shadow_test.shape[0]
-    print(n_shadow_train == n_shadow_test)
 
     X_shadow = (
         torch.cat([shadow_train, shadow_test])
@@ -174,13 +176,36 @@ def SVC_classifier(shadow_train, shadow_test):
         .numpy()
         .reshape(n_shadow_train + n_shadow_test, -1)
     )
+
     Y_shadow = np.concatenate([np.ones(n_shadow_train), np.zeros(n_shadow_test)])
-    
+
     clf = SVC(C=3, gamma="auto", kernel="rbf")
     clf.fit(X_shadow, Y_shadow)
-    print('train:',clf.predict(shadow_train.cpu().numpy().reshape(n_shadow_train, -1)).mean())
-    print('test:',clf.predict(shadow_test.cpu().numpy().reshape(n_shadow_test, -1)).mean())
-    return clf
+
+    train_scores = clf.decision_function(
+        shadow_train.cpu().numpy().reshape(n_shadow_train, -1)
+    )
+
+    test_scores = clf.decision_function(
+        shadow_test.cpu().numpy().reshape(n_shadow_test, -1)
+    )
+
+    mu_train = train_scores.mean()
+    sigma_train = train_scores.std()
+
+    mu_test = test_scores.mean()
+    sigma_test = test_scores.std()
+
+    print("train:", (train_scores > 0).mean())
+    print("test:", (test_scores > 0).mean())
+
+    return {
+        "clf": clf,
+        "mu_train": mu_train,
+        "sigma_train": sigma_train,
+        "mu_test": mu_test,
+        "sigma_test": sigma_test,
+    }
 
 def SVC_classifiers(shadow_train, shadow_test, model):
     """Return a dict of classifiers model"""
@@ -224,36 +249,42 @@ def SVC_classifiers(shadow_train, shadow_test, model):
     return clfs
 
 def SVC_predict(clfs, target_loader, model):
+
     target_prob, target_labels = collect_prob(target_loader, model)
-    target_corr = (
-        torch.argmax(target_prob, axis=1) == target_labels
-    ).int()
+
+    target_corr = (torch.argmax(target_prob, axis=1) == target_labels).int()
     target_conf = torch.gather(target_prob, 1, target_labels[:, None])
     target_entr = entropy(target_prob)
     target_m_entr = m_entropy(target_prob, target_labels)
 
+    features = {
+        "prob": target_prob,
+        "correctness": target_corr,
+        "confidence": target_conf,
+        "entropy": target_entr,
+        "m_entropy": target_m_entr,
+    }
+
     results = {}
-    for metric, clf in clfs.items():
-        if metric == "prob":
-            X_target = target_prob.cpu().numpy().reshape(target_prob.shape[0], -1)
-            pred = clf.predict(X_target)
-            results[metric] = pred.mean()
-        elif metric == "correctness":
-            X_target = target_corr.cpu().numpy().reshape(target_corr.shape[0], -1)
-            pred = clf.predict(X_target)
-            results[metric] = pred.mean()
-        elif metric == "confidence":
-            X_target = target_conf.cpu().numpy().reshape(target_conf.shape[0], -1)
-            pred = clf.predict(X_target)
-            results[metric] = pred.mean()
-        elif metric == "entropy":
-            X_target = target_entr.cpu().numpy().reshape(target_entr.shape[0], -1)
-            pred = clf.predict(X_target)
-            results[metric] = pred.mean()
-        elif metric == "m_entropy":
-            X_target = target_m_entr.cpu().numpy().reshape(target_m_entr.shape[0], -1)
-            pred = clf.predict(X_target)
-            results[metric] = pred.mean()
-        else:
-            raise ValueError(f"Unknown metric: {metric}")
+
+    for metric, clf_dict in clfs.items():
+
+        clf = clf_dict["clf"]
+
+        X_target = features[metric].cpu().numpy().reshape(features[metric].shape[0], -1)
+
+        scores = clf.decision_function(X_target)
+
+        mu_train = clf_dict["mu_train"]
+        sigma_train = clf_dict["sigma_train"]
+        mu_test = clf_dict["mu_test"]
+        sigma_test = clf_dict["sigma_test"]
+
+        p_train = gaussian_pdf(scores, mu_train, sigma_train)
+        p_test = gaussian_pdf(scores, mu_test, sigma_test)
+
+        mia_scores = p_train / (p_train + p_test + 1e-12)
+
+        results[metric] = mia_scores.mean()
+
     return results
