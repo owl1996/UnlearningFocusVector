@@ -347,6 +347,7 @@ def LDA_update_unlearn(data_loaders, model, criterion, args):
 
     num_classes = last_layer.out_features
     W_net = last_layer.weight.data.clone()
+    bias_net = last_layer.bias.data.clone()
     
     # Determine feature dimension from the first batch
     for batch in retain_loader:
@@ -456,9 +457,11 @@ def LDA_update_unlearn(data_loaders, model, criterion, args):
     W_new = W_net - Delta_LDA
 
     # Recalculate ultimate structural layer specific prior probabilities and exact structural biases
-    prior_probs = class_counts_r / (n_r + 1e-8)
-    bias_new = torch.log(prior_probs + 1e-8) - 0.5 * (W_new * M_r).sum(dim=1)
+    prior_probs = (class_counts_r + class_counts_u) / (n_u + n_r + 1e-8)
+    prior_probs_r = class_counts_r / (n_r + 1e-8)
+    Delta_bias = torch.log(prior_probs/prior_probs_r + 1e-8) - 0.5 * (W_net * Delta_M + Delta_LDA * M_r).sum(dim=1)
 
+    bias_new = bias_net - Delta_bias
     # Replace generated final theoretical weights tracking
     try:
         model.fc.weight.data = W_new
