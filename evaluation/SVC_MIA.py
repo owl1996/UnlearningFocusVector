@@ -166,6 +166,7 @@ def SVC_classifier(shadow_train, shadow_test):
     "Return a classifier model"
     n_shadow_train = shadow_train.shape[0]
     n_shadow_test = shadow_test.shape[0]
+    print(n_shadow_train == n_shadow_test)
 
     X_shadow = (
         torch.cat([shadow_train, shadow_test])
@@ -177,6 +178,8 @@ def SVC_classifier(shadow_train, shadow_test):
     
     clf = SVC(C=3, gamma="auto", kernel="rbf")
     clf.fit(X_shadow, Y_shadow)
+    print('train:',clf.predict(shadow_train.cpu().numpy().reshape(n_shadow_train, -1)).mean())
+    print('test:',clf.predict(shadow_test.cpu().numpy().reshape(n_shadow_test, -1)).mean())
     return clf
 
 def SVC_classifiers(shadow_train, shadow_test, model):

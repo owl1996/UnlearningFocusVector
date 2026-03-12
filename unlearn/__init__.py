@@ -36,6 +36,8 @@ from .CT import CT
 from .OS import OS_unlearn
 from .LDA import LDA_unlearn, LDA_CG_unlearn, LDA_update_unlearn
 
+from .original import original
+
 def get_unlearn_method(name):
     """method usage:
 
@@ -94,6 +96,8 @@ def get_unlearn_method(name):
     elif name == "SCRUB":
         return SCRUB
 
+    elif name == "original":
+        return original
     elif name == "OS_unlearn":
         return OS_unlearn
     elif name == "LDA":
